@@ -32,21 +32,21 @@ data_orig <- read.csv(file.path(indir, "FisheryDisasters_1989-2021.csv"), as.is=
 # Convert NE and GOM to states- check against state years?
 
 # Format data
-data <- data_orig %>% 
+data <- data_orig %>%
   # Rename columns
-  janitor::clean_names("snake") %>% 
+  janitor::clean_names("snake") %>%
   rename(extra_notes=x,
-         disaster_id=disaster_number, 
+         disaster_id=disaster_number,
          disaster_years=year,
          disaster_year1_orig=year_1,
-         region=management_zone, 
-         area_season=area_season_affected, 
-         mgmt_type=state_federal, 
+         region=management_zone,
+         area_season=area_season_affected,
+         mgmt_type=state_federal,
          sector_type_orig=comm_rec_tribal,
          requesters=requester_s,
          request_dates=request_date,
          request_year_lag_yrs=request_year_disaster_year,
-         determination=secretary_of_commerce_determination, 
+         determination=secretary_of_commerce_determination,
          determination_dates=determination_date,
          determination_dates_lag_days=determination_lag_d,
          appropriation_amount_usd=appropriation_amount,
@@ -56,14 +56,14 @@ data <- data_orig %>%
          cause=cause_of_disaster,
          cause_simplified=cause_simplified,
          cause_catg=cause_more_simplified,
-         damages_est_usd=total_est_damages) %>% 
+         damages_est_usd=total_est_damages) %>%
   # Remove useless rows
-  filter(state!="REPEAT OF NO. 110") %>% 
+  filter(state!="REPEAT OF NO. 110") %>%
   # Format region
-  mutate(region=gsub(" Region", "", region)) %>% 
+  mutate(region=gsub(" Region", "", region)) %>%
   # Format state
   mutate(state=stringr::str_trim(state),
-         state=recode(state, 
+         state=recode(state,
                       "Alaska"="AK",
                       "American Samoa"="AS",
                       "California"="CA",
@@ -79,63 +79,63 @@ data <- data_orig %>%
                       "MA, ME, NH, CT, RI, and NY"="MA, ME, NH, CT, RI, NY",
                       "Maine"="ME",
                       "Massachusetts"="MA",
-                      "Mississippi"="MS", 
+                      "Mississippi"="MS",
                       "New Hampshire"="NH",
-                      "New Jersey and New York"="NJ, NY", 
+                      "New Jersey and New York"="NJ, NY",
                       "New York"="NY",
-                      "North Carolina"="NC", 
-                      "Oregon"="OR", 
+                      "North Carolina"="NC",
+                      "Oregon"="OR",
                       "Oregon and California"="OR, CA",
                       "Rhode Island"="RI",
                       "Texas"="TX",
-                      "Virginia"="VA", 
-                      "Washington"="WA")) %>% 
+                      "Virginia"="VA",
+                      "Washington"="WA")) %>%
   # Format management type,
-  mutate(mgmt_type=recode(mgmt_type, 
+  mutate(mgmt_type=recode(mgmt_type,
                           "Both"="Federal/State",
-                          "Federal and State"="Federal/State", 
-                          "Federal, State"="Federal/State", 
-                          "Federal, Tribal"="Federal/Tribal")) %>% 
+                          "Federal and State"="Federal/State",
+                          "Federal, State"="Federal/State",
+                          "Federal, Tribal"="Federal/Tribal")) %>%
   # Format sector type
   mutate(sector_type_orig=stringr::str_trim(sector_type_orig),
-         sector_type=gsub("\\s*\\([^\\)]+\\)", "", sector_type_orig)) %>% 
+         sector_type=gsub("\\s*\\([^\\)]+\\)", "", sector_type_orig)) %>%
   mutate(sector_type=recode(sector_type,
                             "Commercial and Recreational"="Commercial, Recreational",
                             "Commercial and Tribal"="Commercial, Tribal",
                             "Tribal / Commercial"="Commercial, Tribal",
                             "Swinomish, Lummi, Upper Skagit"="Tribal",
                             "Port Gamble S'Klallam"="Tribal",
-                            "Commercial, Recreational, Subsistence, Other Fishing Industry"="All")) %>% 
+                            "Commercial, Recreational, Subsistence, Other Fishing Industry"="All")) %>%
   # Add tribes
-  mutate(tribes=gsub("(?<=\\()[^()]*(?=\\))(*SKIP)(*F)|.", "", sector_type_orig, perl=T)) %>% 
+  mutate(tribes=gsub("(?<=\\()[^()]*(?=\\))(*SKIP)(*F)|.", "", sector_type_orig, perl=T)) %>%
   mutate(tribes=ifelse(sector_type_orig %in% c("Port Gamble S'Klallam", "Swinomish, Lummi, Upper Skagit"), sector_type_orig, tribes),
-         tribes=recode(tribes, "including Chignik"="Chignik")) %>% 
+         tribes=recode(tribes, "including Chignik"="Chignik")) %>%
   # Format disaster year
-  mutate(disaster_year1=substr(disaster_year1_orig, 1, 4) %>% as.numeric(.)) %>% 
+  mutate(disaster_year1=substr(disaster_year1_orig, 1, 4) %>% as.numeric(.)) %>%
   # Format request date
-  # 
+  #
   # Format request year
-  mutate(request_year=as.numeric(request_year)) %>% 
+  mutate(request_year=as.numeric(request_year)) %>%
   # Convert appropriation amounts
-  mutate(appropriation_amount_usd=appropriation_amount_usd %>% gsub("\\(cont. from 2008-2009\\)", "", .) %>% stringr::str_trim(), 
+  mutate(appropriation_amount_usd=appropriation_amount_usd %>% gsub("\\(cont. from 2008-2009\\)", "", .) %>% stringr::str_trim(),
          appropriation_amount_usd=appropriation_amount_usd %>% gsub("\\$", "", .) %>% gsub(",", "", .) %>% as.numeric(),
-         appropriation_amount_usd_2019=appropriation_amount_usd_2019 %>% gsub("\\$", "", .) %>% gsub(",", "", .) %>% as.numeric()) %>% 
+         appropriation_amount_usd_2019=appropriation_amount_usd_2019 %>% gsub("\\$", "", .) %>% gsub(",", "", .) %>% as.numeric()) %>%
   # Arrange
-  select(disaster_id, 
+  select(disaster_id,
          disaster_years, disaster_year1_orig, disaster_year1,
          region, state, area_season,
          state_years,
          mgmt_type, sector_type, tribes,
-         fishery, 
-         requesters, request_year, request_dates, request_year_lag_yrs, request_letter, 
+         fishery,
+         requesters, request_year, request_dates, request_year_lag_yrs, request_letter,
          determination, determination_year, determination_dates, determination_dates_lag_days,
          determination_authority, determination_letter, press_release,
          funding_authority, correction_factor_2019usd, appropriation_amount_usd, appropriation_amount_usd_2019, damages_est_usd,
          cause_formal, cause, cause_simplified, cause_catg,
          notes,
-         everything()) %>% 
+         everything()) %>%
   # Remove useless columns
-  select(-c(freq, sector_type_orig, -x_1)) %>% 
+  select(-c(freq, sector_type_orig, -x_1)) %>%
   # Arrange
   arrange(disaster_id)
 
@@ -146,8 +146,6 @@ anyDuplicated(data$disaster_id)
 str(data)
 freeR::complete(data)
 colnames(data)
-
-
 
 
 ##################################
