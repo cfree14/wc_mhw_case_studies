@@ -27,7 +27,7 @@ data <- data_orig %>%
   # Simplify
   select(disaster_id, disaster_year1, region, state, fishery, determination, cause_catg) %>%
   # Format causes
-  mutate(cause_catg=ifelse(cause_catg=="", "Not officially determined", cause_catg),
+  mutate(cause_catg=ifelse(is.na(cause_catg), "Not officially determined", cause_catg),
          cause_catg=recode(cause_catg,
                            "Human Causes"="Human",
                            "Environmental Anomalies"="Environmental",
@@ -112,12 +112,21 @@ stats <- data_exp %>%
   mutate(species=factor(species, levels=rev(species_order)))
 
 
+# MHW disasters
+################################################################################
+
+mhw_disasters <- data_orig %>%
+  # WC distasters
+  filter(region %in% c("Alaska", "West Coast")) %>%
+  # MHW disasters
+  filter(disaster_year1%in% 2013:2016)
+
 # Plot data
 ################################################################################
 
 # Setup theme
 my_theme <-  theme(axis.text=element_text(size=7),
-                   axis.title=element_text(size=8),
+                   axis.title=element_blank(),
                    legend.text=element_text(size=7),
                    legend.title=element_text(size=8),
                    strip.text=element_text(size=8),
@@ -127,6 +136,7 @@ my_theme <-  theme(axis.text=element_text(size=7),
                    panel.background = element_blank(),
                    axis.line = element_line(colour = "black"),
                    # Legend
+                   legend.key.size = unit(0.5, "cm"),
                    legend.background = element_rect(fill=alpha('blue', 0)))
 
 # Plot data
@@ -135,13 +145,13 @@ g <- ggplot(stats, aes(x=disaster_year1, y=species,
   # Facet
   facet_grid(taxa_group~region, space="free", scales="free_y") +
   # Plot MHW years
-  geom_rect(xmin=2014.5, xmax=2018.5, ymin=1, ymax=20, fill="grey90", inherit.aes = F) +
+  geom_rect(xmin=2013.5, xmax=2017.5, ymin=1, ymax=20, fill="grey90", inherit.aes = F) +
   # Plot disasters
   geom_point() +
   # Axis
-  scale_x_continuous(breaks=seq(1990,2020,5)) +
+  scale_x_continuous(breaks=seq(1990,2020,5), lim=c(1990, 2020)) +
   # Labels
-  labs(x="Year", y="") +
+  labs(x="", y="") +
   # Legends
   scale_color_discrete(name="Diaster cause") +
   scale_size_continuous(name="Number of disasters", breaks=c(1,2,3), range=c(1.5,4)) +
