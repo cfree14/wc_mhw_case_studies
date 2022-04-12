@@ -121,6 +121,11 @@ mhw_disasters <- data_orig %>%
   # MHW disasters
   filter(disaster_year1%in% 2013:2016)
 
+
+mhw_disasters %>%
+  filter(determination %in% c("Approved", "Partially Approved")) %>%
+  pull(appropriation_amount_usd) %>% sum() / 1e6
+
 # Plot data
 ################################################################################
 
