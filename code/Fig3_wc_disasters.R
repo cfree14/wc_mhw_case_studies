@@ -150,7 +150,7 @@ g <- ggplot(stats, aes(x=disaster_year1, y=species,
   # Facet
   facet_grid(taxa_group~region, space="free", scales="free_y") +
   # Plot MHW years
-  geom_rect(xmin=2013.5, xmax=2017.5, ymin=1, ymax=20, fill="grey90", inherit.aes = F) +
+  geom_rect(xmin=2013.5, xmax=2016.5, ymin=1, ymax=20, fill="grey90", inherit.aes = F) +
   # Plot disasters
   geom_point() +
   # Axis
@@ -167,7 +167,7 @@ g <- ggplot(stats, aes(x=disaster_year1, y=species,
 g
 
 # Export plot
-ggsave(g, filename=file.path(plotdir, "Fig4_wc_disasters.png"),
+ggsave(g, filename=file.path(plotdir, "Fig3_wc_disasters.png"),
        width=6.5, height=4, units="in", dpi=600)
 
 

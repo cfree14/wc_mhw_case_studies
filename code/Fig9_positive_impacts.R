@@ -53,6 +53,11 @@ shortbelly2_use <- shortbelly2 %>%
 # Merge
 shortbelly <- bind_rows(shortbelly1, shortbelly2_use)
 
+# Shortbelly catch limit
+sb_limit_lb <- 13900 *2000
+sb_limit_kg <- measurements::conv_unit(sb_limit_lb, "lbs", "kg")
+sb_limit_mt <- sb_limit_kg / 1000
+
 
 # Market squid
 ################################################################################
@@ -136,6 +141,8 @@ g1 <- ggplot(shortbelly, aes(x=year, y=catch_mt, fill=catch_type)) +
   annotate(geom="text", label="MHW", x=2015, y=600, size=2.1) +
   # Plot GEMM datch
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
+  # Plot catch limit
+  # geom_hline(yintercept=sb_limit_mt, linetype="dotted") +
   # Plot PACFIN catch
   # geom_line(data=shortbelly2, aes(x=year, y=catch_mt), inherit.aes = F) +
   # Labels
