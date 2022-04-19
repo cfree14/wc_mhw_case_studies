@@ -59,7 +59,6 @@ seasons_ca_c <- tibble(year=paste(seasons_do, seasons_do+1, sep="-"),
                        open=openers_ca_c,
                        close=closers_ca_c)
 
-
 # Fix data
 closures <- closures_orig %>%
   mutate(status=as.character(status),
@@ -102,8 +101,12 @@ sardine <- pacfin_orig %>%
   # Order states
   mutate(state=factor(state, levels=c("California", "Oregon", "Washington") %>% rev()))
 
+# Pacific cod data
+################################################################################
 
-# Read abalone data
+
+
+# Red abalone data
 ################################################################################
 
 # Read data
@@ -117,7 +120,7 @@ abalone <- abalone_orig %>%
   # Order counties
   mutate(county=factor(county, levels=c("Del Norte", "Humboldt", "Mendocino", "Sonoma", "Marin")))
 
-# Read Chinook data
+# Chinook data
 ################################################################################
 
 # Read data
