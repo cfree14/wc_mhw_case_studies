@@ -135,10 +135,11 @@ my_theme <-  theme(axis.text=element_text(size=7),
 
 
 # Shortbelly
+ymax1 <- shortbelly %>% group_by(year) %>% summarize(val=sum(catch_mt)) %>% pull(val) %>% max()
 g1 <- ggplot(shortbelly, aes(x=year, y=catch_mt, fill=catch_type)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=600, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax1*1.05, size=2.1) +
   # Plot GEMM datch
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Plot catch limit
@@ -156,10 +157,11 @@ g1 <- ggplot(shortbelly, aes(x=year, y=catch_mt, fill=catch_type)) +
 g1
 
 # Market squid
+ymax2 <- squid %>% group_by(year) %>% summarize(val=sum(value_usd/1e6)) %>% pull(val) %>% max()
 g2 <- ggplot(squid, aes(x=year, y=value_usd/1e6, fill=state)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=80, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax2*1.05, size=2.1) +
   # Plot PACFIN value
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Labels
@@ -173,10 +175,11 @@ g2 <- ggplot(squid, aes(x=year, y=value_usd/1e6, fill=state)) +
 g2
 
 # Bluefin
+ymax3 <- bluefin %>% group_by(year) %>% summarize(val=sum(landings_n/1e3)) %>% pull(val) %>% max()
 g3 <- ggplot(bluefin, aes(x=year, y=landings_n/1e3, fill=region)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=80, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax3*1.05, size=2.1) +
   # Plot PACFIN value
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Labels
@@ -203,72 +206,6 @@ g
 # Export plot
 ggsave(g, filename=file.path(plotdir, "Fig9_negative_impacts.png"),
        width=6.5, height=4.5, units="in", dpi=600)
-
-
-
-
-# Bluefin
-bluefin <- cpfv_orig %>%
-  # Bluefin
-  filter(comm_name=="Bluefin tuna") %>%
-  # Summarize by total
-  group_by(year) %>%
-  summarize(landings_n=sum(landings_n)) %>%
-  ungroup()
-
-
-
-# Plot data
-################################################################################
-
-# Plot data
-g1 <- ggplot(shortbelly1, aes(x=year, y=catch_mt, fill=catch_type)) +
-  geom_bar(stat="identity") +
-  theme_bw()
-g1
-
-# Plot data
-g1 <- ggplot(shortbelly2, aes(x=year, y=landings_mt)) +
-  geom_bar(stat="identity") +
-  theme_bw()
-g1
-
-
-# Plot squid data
-g1 <- ggplot(squid, aes(x=year, y=value_usd/1e6, fill=state)) +
-  geom_bar(stat="identity") +
-  # Landings
-  labs(x="", y="Revenues (USD millions)") +
-  # Theme
-  theme_bw()
-g1
-
-# Plot urchin data
-g1 <- ggplot(urchin, aes(x=year, y=value_usd/1e6, fill=state)) +
-  geom_bar(stat="identity") +
-  # Landings
-  labs(x="", y="Revenues (USD millions)") +
-  # Theme
-  theme_bw()
-g1
-
-# Plot sardine data
-g1 <- ggplot(sardine, aes(x=year, y=value_usd/1e6, fill=state)) +
-  geom_bar(stat="identity") +
-  # Landings
-  labs(x="", y="Revenues (USD millions)") +
-  # Theme
-  theme_bw()
-g1
-
-# Plot bluefin
-g1 <- ggplot(bluefin, aes(x=year, y=landings_n/1000)) +
-  geom_bar(stat="identity") +
-  # Landings
-  labs(x="", y="Bluefin landings\n(1000s of fish)") +
-  # Theme
-  theme_bw()
-g1
 
 
 

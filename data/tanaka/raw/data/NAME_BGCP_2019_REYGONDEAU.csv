@@ -1,0 +1,57 @@
+BGCP,CODE,NAME,BIOME,OCEAN
+1,ETRA,Eastern tropical Atlantic ,Tradewind,Atlantic
+2,APLR,Austral polar ,Polar,Antarctic
+3,ANTA,Antarctic ,Polar,Antarctic
+4,SANT,Subantarctic water ring ,Westerly,Antarctic
+5,SSTC,South subtropical convergence ,Westerly,Antarctic
+6,WTRA,Western tropical Atlantic ,Tradewind,Atlantic
+7,NEWZ,New Zealand coast ,Coastal,Pacific
+8,AUSE,East Australian coast ,Coastal,Pacific
+9,SUND,Sunda-Arafura shelves ,Coastal,Pacific
+10,NATR,North Atlantic tropical gyre,Tradewind,Atlantic
+11,CHIN,China Sea ,Coastal,Pacific
+12,CHIL,Chilean upwelling,Coastal,Pacific
+13,CAMR,Central American coast ,Coastal,Pacific
+14,CCAL,Coastal Californian current ,Coastal,Pacific
+15,ALSK,Alaska coastal downwelling ,Coastal,Pacific
+16,ARCH,Archipelagic deep basins ,Tradewind,Pacific
+17,WARM,Western Pacific warm pool,Tradewind,Pacific
+18,PEQD,Pacific equatorial divergence ,Tradewind,Pacific
+19,PNEC,North Pacific equatorial counter current,Tradewind,Pacific
+20,NPTG,North Pacific Tropical gyre,Tradewind,Pacific
+21,NASTW,Northwest Atlantic subtropical gyre,Westerly,Atlantic
+22,SPSG,South Pacific gyre ,Tradewind,Pacific
+23,TASM,Pacific Tasman Sea ,Westerly,Pacific
+24,OCAL,Oceanic California current ,Tradewind,Pacific
+25,NPSW,Northwest Pacific subtropical ,Westerly,Pacific
+26,NPSE,Northeast Pacific subtropical ,Westerly,Pacific
+27,NPPF,North Pacific polar front,Westerly,Pacific
+28,KURO,Kuroshio current ,Westerly,Pacific
+29,PSAW,Western Pacific subarctic gyres,Westerly,Pacific
+30,PSAE,Eastern Pacific subarctic gyres,Westerly,Pacific
+31,BERS,North Pacific epicontinental sea,Polar,Pacific
+32,GFST,Gulf Stream ,Westerly,Atlantic
+33,NADR,North Atlantic Drift ,Westerly,Atlantic
+34,AUSW,Western Australian and Indonesian coast,Coastal,Indian
+35,INDW,Western India coast ,Coastal,Indian
+36,INDE,Eastern India coast ,Coastal,Indian
+37,ARAB,Northwest Arabian Sea upwelling,Westerly,Indian
+38,REDS,"Red Sea, Arabian Gulf",Coastal,Indian
+39,EAFR,Eastern India coast ,Coastal,Indian
+40,ISSG,Indian South subtropical gyre,Tradewind,Indian
+41,MONS,Indian monsoon gyre ,Tradewind,Indian
+42,SARC,Atlantic sub-Arctic ,Polar,Atlantic
+43,BENG,Benguela current coast ,Coastal,Atlantic
+44,FKLD,Southwest Atlantic shelves ,Coastal,Atlantic
+45,BRAZ,Brazilian current coast ,Coastal,Atlantic
+46,ARCT,Atlantic Arctic ,Polar,Atlantic
+47,NASTE,Northeast Atlantic subtropical gyre,Westerly,Atlantic
+48,CARB,Caribbean ,Tradewind,Atlantic
+49,MEDI,Mediterranean Sea ,Westerly,Atlantic
+50,NWCS,Northwest Atlantic shelves ,Coastal,Atlantic
+51,GUIA,Guianas coast ,Coastal,Atlantic
+52,GUIN,Guinea current coast ,Coastal,Atlantic
+53,CNRY,Canary current coast ,Coastal,Atlantic
+54,NECS,Northeast Atlantic shelves ,Coastal,Atlantic
+55,SATL,South Atlantic gyre ,Tradewind,Atlantic
+56,BPLR,Boreal polar ,Polar,Arctic

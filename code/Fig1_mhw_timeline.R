@@ -11,6 +11,7 @@ library(tidyverse)
 
 # Directories
 datadir <- "/Users/cfree/Dropbox/Chris/UCSB/projects/wc_cc_synthesis/data/environmental/indices/processed/"
+tanakadir <- "data/tanaka/raw/data"
 plotdir <- "figures"
 
 # Read data
@@ -26,6 +27,12 @@ usa <- rnaturalearth::ne_states(country = "United States of America", returnclas
 mexico <- rnaturalearth::ne_countries(country="Mexico", returnclass = "sf")
 canada <- rnaturalearth::ne_countries(country="Canada", returnclass = "sf")
 
+
+# MHW raster data
+################################################################################
+
+# Read data
+data <- raster(file.path(tanakadir, "8.5_1.nc"))
 
 # Format data
 ################################################################################

@@ -191,10 +191,11 @@ g1 <- ggplot(closures, aes(x=date, y=lat_dd, fill=status)) +
 g1
 
 # Pacific sardine
+ymax2 <- sardine %>% group_by(year) %>% summarize(val=sum(value_usd/1e6)) %>% pull(val) %>% max()
 g2 <- ggplot(sardine, aes(x=year, y=value_usd/1e6, fill=state)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=13.5, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax2*1.05, size=2.1) +
   # Value
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Label closure
@@ -211,10 +212,11 @@ g2 <- ggplot(sardine, aes(x=year, y=value_usd/1e6, fill=state)) +
 g2
 
 # Read abalone
+ymax3 <- abalone %>% group_by(year) %>% summarize(val=sum(landings_n/1000)) %>% pull(val) %>% max()
 g3 <- ggplot(abalone, aes(x=year, y=landings_n/1000, fill=county)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=300, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax3*1.05, size=2.1) +
   # Value
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Label closure
@@ -231,10 +233,11 @@ g3 <- ggplot(abalone, aes(x=year, y=landings_n/1000, fill=county)) +
 g3
 
 # Chinook salmon
+ymax4 <- max(salmon$abundance/1e3, na.rm=T)
 g4 <- ggplot(salmon, aes(x=year, y=abundance/1e3, linetype=type)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90", show.legend = F) +
-  annotate(geom="text", label="MHW", x=2015, y=1500, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax4*1.05, size=2.1) +
   geom_line() +
   # Labels
   labs(x="", y="Abundance\n(1000s of salmon)", title="Klamath River Fall Chinook salmon fishery", tag="D") +
