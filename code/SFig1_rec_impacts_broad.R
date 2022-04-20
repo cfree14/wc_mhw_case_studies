@@ -107,7 +107,7 @@ g1 <- ggplot(data, aes(x=year, y=retained_n/1e6, color=state)) +
                                            yend=retained_n_avg/1e6,
                                            color=state), linetype="dotted", lwd=0.5) +
    # Labels
-  labs(x="Year", y="Landings\n(millions of retained fish)", tag="A") +
+  labs(x="Year", y="Landings\n(millions of fish)", tag="A") +
   scale_color_discrete(name="") +
   # Theme
   theme_bw() + my_theme +

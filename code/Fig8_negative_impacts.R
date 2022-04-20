@@ -224,7 +224,7 @@ g3 <- ggplot(abalone, aes(x=year, y=landings_n/1000, fill=county)) +
   annotate(geom="text", label="Fishery\nclosure", x=2017.5, y=250, hjust=0, size=2.1) +
   # Labels
   labs(x="", y="Landings\n(1000s of abalone)", title="Recreational red abalone fishery", tag="C") +
-  scale_fill_discrete(name="County (in California)") +
+  scale_fill_discrete(name="California county\n(north to south)") +
   scale_x_continuous(lim=c(1980, 2022)) +
   # Theme
   theme_bw() + my_theme +
