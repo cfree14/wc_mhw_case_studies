@@ -120,7 +120,7 @@ g2 <- ggplot(data_group, aes(x=period, y=category, size=retained_n/1e6, fill=ret
   facet_wrap(~state) +
   geom_point(pch=21) +
   # Labels
-  labs(x="Period", y="", tag="B") +
+  labs(x="Heatwave period", y="", tag="B") +
   # Size legend
   scale_size_continuous(name="Mean annual landings\n(millions of fish)") +
   # Color legend
