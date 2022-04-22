@@ -95,37 +95,15 @@ squid <- pacfin_orig %>%
 # Bluefin tuna
 ################################################################################
 
-# CDFW data
-cpfv1 <- wcfish::cdfw_cpfv
-cpfv2 <- wcfish::cdfw_cpfv_port
+# Read bluefin data
+bluefin_orig <- read.csv("data/case_study_data/bluefin/CPFV_PBF_Totals.csv", as.is=T)
 
-# Bluefin
-bluefin1 <- cpfv1 %>%
-  # Bluefin tuna
-  filter(comm_name=="Bluefin tuna") %>%
-  # Sum by year
-  group_by(waters, year) %>%
-  summarize(landings_n=sum(landings_n)) %>%
-  ungroup() %>%
-  # Add region
-  rename(region=waters)
-
-# Bluefin
-bluefin2 <- cpfv2 %>%
-  # Bluefin tuna
-  filter(comm_name=="Bluefin tuna") %>%
-  # Summarize
-  group_by(year) %>%
-  summarise(landings_n=sum(landings_n)) %>%
-  ungroup() %>%
-  # Add region
-  mutate(region="USA+Mexico") %>%
-  # Reduce
-  filter(year < 2000)
-
-# Merge
-bluefin <- bind_rows(bluefin1, bluefin2) %>%
-  mutate(region=factor(region, levels=c("USA", "Mexico", "USA+Mexico")))
+# Format
+bluefin <- bluefin_orig %>%
+  rename(region=EEZ, landings_n=totalPBF) %>%
+  mutate(region=recode_factor(region,
+                              "United States"="USA",
+                              "Mexico"="Mexico"))
 
 
 # Plot data
@@ -160,9 +138,11 @@ g1 <- ggplot(shortbelly, aes(x=year, y=catch_mt, fill=catch_type)) +
   # Plot GEMM datch
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Plot catch limit
-  # geom_hline(yintercept=sb_limit_mt, linetype="dotted") +
+  annotate(geom="text", x=2008, y=50, label="50 mt limit", color="grey30", vjust=-0.4, hjust=0, size=2.2) +
+  geom_segment(x=2008, xend=2015, y=50, yend=50,  color="grey30") +
+  annotate(geom="text", x=2017, y=500, label="500 mt limit", color="grey30", vjust=-0.4, hjust=1, size=2.2) +
+  geom_segment(x=2015, xend=2020, y=500, yend=500,  color="grey30") +
   # Plot PACFIN catch
-  # geom_line(data=shortbelly2, aes(x=year, y=catch_mt), inherit.aes = F) +
   # Labels
   labs(x="", y="\nCatch (mt)", title="Shortbelly rockfish bycatch fishery", tag="A") +
   scale_fill_discrete(name="Catch type") +
