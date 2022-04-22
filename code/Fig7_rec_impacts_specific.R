@@ -140,7 +140,7 @@ g <- ggplot(data_use_ordered, aes(x=period, y=comm_name, fill=retained_n_pdiff_c
 g
 
 # Export data
-ggsave(g, filename=file.path(plotdir, "Fig6_rec_impacts_long.png"),
+ggsave(g, filename=file.path(plotdir, "Fig7_rec_impacts_long.png"),
        width=4.5, height=11, units="in", dpi=600)
 
 
@@ -199,7 +199,7 @@ g <- gridExtra::grid.arrange(g1, g2, ncol=2, widths=c(0.4, 0.6))
 g
 
 # Export
-ggsave(g, filename=file.path(plotdir, "Fig6_rec_impacts_wide.png"),
+ggsave(g, filename=file.path(plotdir, "Fig7_rec_impacts_wide.png"),
        width=8, height=8, units="in", dpi=600)
 
 

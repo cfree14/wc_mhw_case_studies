@@ -87,7 +87,7 @@ date_max_do <- ymd(paste0(max(seasons_do)+1, "-01-01"))
 ################################################################################
 
 # PACFIN data
-pacfin_orig <- wcfish::pacfin_all6
+pacfin_orig <- wcfish::pacfin_all5
 
 # Build data
 sardine <- pacfin_orig %>%
@@ -271,7 +271,7 @@ g
 ################################################################################
 
 # Export plot
-ggsave(g, filename=file.path(plotdir, "Fig8_negative_impacts.png"),
+ggsave(g, filename=file.path(plotdir, "Fig9_negative_impacts.png"),
        width=6.5, height=6.5, units="in", dpi=600)
 
 

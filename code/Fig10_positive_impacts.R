@@ -17,7 +17,8 @@ plotdir <- "figures"
 
 # Read GEMM data
 gemm_orig <- readRDS("/Users/cfree/Dropbox/Chris/UCSB/consulting/halibut_bycatch/data/gemm/processed/GEMM_2002_2020_data.Rds")
-pacfin_orig <- wcfish::pacfin_all6
+pacfin_orig <- wcfish::pacfin_all5
+noaa_orig <- wcfish::noaa
 
 # Build GEMM catch
 shortbelly1 <- gemm_orig %>%
@@ -50,13 +51,31 @@ shortbelly2 <- pacfin_orig %>%
 shortbelly2_use <- shortbelly2 %>%
   filter(!year %in% shortbelly1$year)
 
+# Build NOAA catch
+shortbelly3 <- noaa_orig %>%
+  filter(comm_name=="Shortbelly rockfish") %>%
+  group_by(year) %>%
+  summarize(catch_lb=sum(landings_lb, na.rm=T)) %>%
+  ungroup() %>%
+  mutate(catch_kg=measurements::conv_unit(catch_lb, "lbs", "kg"),
+         catch_mt=catch_kg/1000)
+
 # Merge
 shortbelly <- bind_rows(shortbelly1, shortbelly2_use)
 
 # Shortbelly catch limit
-sb_limit_lb <- 13900 *2000
+sb_limit_lb <- 13900 * 1000
 sb_limit_kg <- measurements::conv_unit(sb_limit_lb, "lbs", "kg")
 sb_limit_mt <- sb_limit_kg / 1000
+
+# Plot data
+g <- ggplot(shortbelly1, aes(x=year, y=catch_mt, fill=catch_type)) +
+  geom_bar(stat="identity", alpha=0.5) +
+  geom_line(data=shortbelly2, aes(x=year, y=catch_mt), inherit.aes=F) +
+  geom_line(data=shortbelly3, aes(x=year, y=catch_mt), inherit.aes=F, linetype="dotted") +
+  labs(x="Year", y="Catch (mt)") +
+  theme_bw()
+g
 
 
 # Market squid
@@ -78,33 +97,31 @@ squid <- pacfin_orig %>%
 
 # CDFW data
 cpfv1 <- wcfish::cdfw_cpfv
-
-# Read other
-cpfv2 <- read.csv(file="/Users/cfree/Dropbox/Chris/UCSB/projects/wc_landings_data/data/cdfw/public/website/cpfv/processed/CDFW_2000_2019_cpfv_landings_statewide.csv", as.is=T)
+cpfv2 <- wcfish::cdfw_cpfv_port
 
 # Bluefin
 bluefin1 <- cpfv1 %>%
   # Bluefin tuna
   filter(comm_name=="Bluefin tuna") %>%
   # Sum by year
-  group_by(year) %>%
+  group_by(waters, year) %>%
   summarize(landings_n=sum(landings_n)) %>%
   ungroup() %>%
   # Add region
-  mutate(region="USA+Mexico")
+  rename(region=waters)
 
 # Bluefin
 bluefin2 <- cpfv2 %>%
-  # Bluefin tuns
-  filter(species=="Tuna, bluefin") %>%
-  # Simpligy
-  select(year, region, landings_n) %>%
-  # Sprad and calculate USA landings
-  spread(key=region, value=landings_n) %>%
-  mutate(USA=All-Mexico) %>%
-  select(-All) %>%
-  # Gather
-  gather(key="region", value="landings_n", 2:ncol(.))
+  # Bluefin tuna
+  filter(comm_name=="Bluefin tuna") %>%
+  # Summarize
+  group_by(year) %>%
+  summarise(landings_n=sum(landings_n)) %>%
+  ungroup() %>%
+  # Add region
+  mutate(region="USA+Mexico") %>%
+  # Reduce
+  filter(year < 2000)
 
 # Merge
 bluefin <- bind_rows(bluefin1, bluefin2) %>%
@@ -204,7 +221,7 @@ g
 ################################################################################
 
 # Export plot
-ggsave(g, filename=file.path(plotdir, "Fig9_negative_impacts.png"),
+ggsave(g, filename=file.path(plotdir, "Fig10_positive_impacts.png"),
        width=6.5, height=4.5, units="in", dpi=600)
 
 
