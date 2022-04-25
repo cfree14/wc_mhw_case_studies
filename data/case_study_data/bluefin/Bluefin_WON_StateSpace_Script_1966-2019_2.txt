@@ -1,0 +1,100 @@
+###############PELAGICS: Bluefin Tuna############################
+
+
+bluefin <- read.table("WON_Bluefin_Data_1968-2019.txt", header = TRUE, sep = "\t")
+head(bluefin) #just to look at what we've got.
+
+bluefin <- pelagics[pelagics$Species== "bluefin tuna",c(5,1)]
+
+# change the years so that the earliest year equals 1...
+bluefin$Year<-bluefin$Year-min(bluefin$Year) +1
+unique(bluefin$Year) #note that at least one year in the series is missing
+
+N.bluef <-dim(bluefin)[1]
+
+years<-bluefin$Year
+
+N.yr<-max(years)
+
+weights<-bluefin$Weight..kg.
+
+
+# Specify model in BUGS
+sink("ssm.jags")
+cat("
+    model { 
+    # Priors and constraints
+    N.est[1] ~ dunif(0, 100)            # Prior for initial yearly max size
+    mean.mu ~ dunif(-10, 10)          # Prior for mean rate of change
+    sigma.proc ~ dunif(0, 10)           # Prior for sd of state process
+    sigma2.proc <- pow(sigma.proc, 2)
+    tau.proc <- pow(sigma.proc, -2)
+    sigma.obs ~ dunif(0, 100)           # Prior for sd of observation process
+    sigma2.obs <- pow(sigma.obs, 2)
+    tau.obs <- pow(sigma.obs, -2)
+    
+    # Likelihood
+    # State process
+    for (t in 1:(N.yr-1)){
+    mu[t] ~ dnorm(mean.mu, tau.proc) 
+    N.est[t+1] <- N.est[t] + mu[t] 
+    }
+    
+    # Observation process
+    for (i in 1:N.bluef) {
+    weights[i] ~ dnorm(N.est[years[i]], tau.obs)
+    }
+    }
+    ",fill = TRUE)
+sink()
+
+# Bundle data
+jags.data <- list(weights=weights,years=years,N.bluef=N.bluef, N.yr=N.yr)
+
+
+# Parameters monitored
+parameters <- c("mu", "mean.mu", "sigma2.obs", "sigma2.proc", "N.est")
+
+# MCMC settings
+ni <- 25000
+nt <- 3
+nb <- 10000
+nc <- 3
+
+# Call JAGS from R (BRT <1 min)
+ssm <- jags(jags.data, inits=NULL, parameters, "ssm.jags", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb, working.directory = getwd())
+
+attach.jags(ssm)
+graph.ssm<-function(N.est,N.yr,weights,years){
+  fitted<-lower<-upper<-numeric()
+  
+  for (i in 1:N.yr){
+    fitted[i]<-mean(N.est[,i])
+    lower[i]<-quantile(N.est[,i],0.025)
+    upper[i]<-quantile(N.est[,i],0.975)
+  }
+  m1<-min(c(weights,fitted,lower))
+  m2<-max(c(weights,fitted,upper)) 
+  #  par(mar=c(4.5,4,1,1),cex=1.2)
+  #  plot(0,0,ylim=c(m1,m2),xlim=c(0.5,N.yr),ylab="Max Fish Size",xlab="year",las=1,col="black",type="l",lwd=2,frame=FALSE,axes=FALSE)
+  data=matrix(NA,length(weights),N.yr)
+  for (y in 1:N.yr){
+    
+    if(length(which(years==y))){
+      data[1:length(which(years==y)),y]=weights[which(years==y)]
+    }
+  }
+  boxplot(data,ylim=c(0,m2),xlim=c(1,48),ylab="Weight (kg)",xlab="year",col="black",type="l",las=1,lwd=2,frame=T,axes=F)
+  axis(2,las=1)
+  axis(1,at=seq(0,N.yr,5), labels=seq(0,N.yr,5))
+  axis(1,at=0:N.yr,labels=rep("",N.yr+1),tcl=-0.25)
+  polygon(x=c(1:N.yr,N.yr:1),y=c(lower,upper[N.yr:1]),col=rgb(.6,.6,.7,.5))
+  lines(fitted,type="l",col="white",lwd=2)
+}
+graph.ssm(N.est,N.yr,weights,years)
+apply(N.est,2,mean) ##extracts fitted values from the model
+
+#print to file
+png(filename="bluefin_timeseries_plot.png",units="in",width=6,height=4,pointsize=12,res=300)
+graph.ssm(N.est,N.yr,weights,years)
+dev.off()

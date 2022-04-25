@@ -81,16 +81,33 @@ g
 # Market squid
 ################################################################################
 
+# Problem ports
+problem_ports <- c("Landed in WA, transported to OR 1", "Other/Unknown California ports 2", "Other/Unknown Oregon ports 2")
+
+# Port order
+ca_ports <- c("San Diego", "Los Angeles", "Santa Barbara", "Morro Bay", "Monterey",
+              "San Francisco", "Bodega Bay", "Fort Bragg", "Eureka", "Crescent City")
+or_ports <- c("Brookings", "Coos Bay", "Newport", "Tillamook", "Columbia River")
+
 # Build squid
 squid <- pacfin_orig %>%
   # Reduce to squid
   filter(comm_name %in% c("Market squid")) %>%
   # Summarize by total
-  group_by(state, year) %>%
+  group_by(state, port_name, year) %>%
   summarize(landings_mt=sum(landings_mt),
             value_usd=sum(revenues_usd)) %>%
-  ungroup()
+  ungroup() %>%
+  # Format port complexes
+  rename(port_complex=port_name) %>%
+  mutate(port_complex=gsub(" Area ports", "", port_complex),
+         port_complex=recode(port_complex, "Columbia River - Oregon"="Columbia River")) %>%
+  # Remove uninteresting ports
+  filter(!port_complex %in% problem_ports) %>%
+  # Factor ports
+  mutate(port_complex=factor(port_complex, levels=c(ca_ports, or_ports)))
 
+count(squid, state, port_complex) %>% arrange(state)
 
 # Bluefin tuna
 ################################################################################
@@ -108,6 +125,13 @@ bluefin <- bluefin_orig %>%
 
 # Plot data
 ################################################################################
+
+# Colors
+ca_color <- RColorBrewer::brewer.pal(9, "Reds")[5]
+or_color <- RColorBrewer::brewer.pal(9, "Blues")[5]
+wa_color <- RColorBrewer::brewer.pal(9, "Greens")[5]
+mex_color <- RColorBrewer::brewer.pal(9, "YlOrRd")[2]
+state_colors <- c(ca_color, or_color, wa_color) %>% rev()
 
 # Theme
 my_theme <-  theme(axis.text=element_text(size=7),
@@ -145,7 +169,7 @@ g1 <- ggplot(shortbelly, aes(x=year, y=catch_mt, fill=catch_type)) +
   # Plot PACFIN catch
   # Labels
   labs(x="", y="\nCatch (mt)", title="Shortbelly rockfish bycatch fishery", tag="A") +
-  scale_fill_discrete(name="Catch type") +
+  scale_fill_manual(name="Catch type", values=c("grey60", "grey20")) +
   scale_x_continuous(lim=c(1980, 2022)) +
   # Theme
   theme_bw() + my_theme +
@@ -154,8 +178,11 @@ g1 <- ggplot(shortbelly, aes(x=year, y=catch_mt, fill=catch_type)) +
 g1
 
 # Market squid
+ca_colors <- freeR::colorpal(RColorBrewer::brewer.pal(9, "Reds"), n_distinct(ca_ports)) %>% rev()
+or_colors <- RColorBrewer::brewer.pal(n_distinct(or_ports), "Blues")
+squid_colors <- c(ca_colors, or_colors)
 ymax2 <- squid %>% group_by(year) %>% summarize(val=sum(value_usd/1e6)) %>% pull(val) %>% max()
-g2 <- ggplot(squid, aes(x=year, y=value_usd/1e6, fill=state)) +
+g2 <- ggplot(squid, aes(x=year, y=value_usd/1e6, fill=port_complex)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
   annotate(geom="text", label="MHW", x=2015, y=ymax2*1.05, size=2.1) +
@@ -163,12 +190,16 @@ g2 <- ggplot(squid, aes(x=year, y=value_usd/1e6, fill=state)) +
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Labels
   labs(x="", y="Revenues\n(USD millions)", title="Commercial market squid fishery", tag="B") +
-  scale_fill_discrete(name="State") +
   scale_x_continuous(lim=c(1980, 2022)) +
+  # Legend
+  scale_fill_manual(name="Port complex\n(south to north)",
+                    values=squid_colors) +
+  guides(fill=guide_legend(ncol=2)) +
   # Theme
   theme_bw() + my_theme +
-  theme(legend.position = c(0.2, 0.8),
-        legend.key.size = unit(0.3, "cm"))
+  theme(legend.position = c(0.28, 0.7),
+        legend.key.size = unit(0.2, "cm"),
+        legend.text = element_text(size=5))
 g2
 
 # Bluefin
@@ -182,7 +213,7 @@ g3 <- ggplot(bluefin, aes(x=year, y=landings_n/1e3, fill=region)) +
   # Labels
   labs(x="", y="Landings\n(1000s of tuna)",
        title="Recreational Pacific bluefin fishery", tag="C") +
-  scale_fill_discrete(name="Source waters") +
+  scale_fill_manual(name="Source waters", values=c(ca_color, mex_color)) +
   scale_x_continuous(lim=c(1980, 2022)) +
   # Theme
   theme_bw() + my_theme +

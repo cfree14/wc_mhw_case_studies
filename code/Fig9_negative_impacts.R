@@ -142,6 +142,12 @@ salmon <- salmon_orig %>%
 # Plot data
 ################################################################################
 
+# Colors
+ca_color <- RColorBrewer::brewer.pal(9, "Reds")[5]
+or_color <- RColorBrewer::brewer.pal(9, "Blues")[5]
+wa_color <- RColorBrewer::brewer.pal(9, "Greens")[5]
+state_colors <- c(ca_color, or_color, wa_color) %>% rev()
+
 # Theme
 my_theme <-  theme(axis.text=element_text(size=7),
                    axis.title=element_text(size=8),
@@ -203,7 +209,7 @@ g2 <- ggplot(sardine, aes(x=year, y=value_usd/1e6, fill=state)) +
   annotate(geom="text", label="Fishery\nclosure", x=2015.5, y=6, hjust=0, size=2.1) +
   # Labels
   labs(x="", y="Revenues\n(USD millions)", title="Commercial Pacific sardine fishery", tag="B") +
-  scale_fill_discrete(name="State") +
+  scale_fill_manual(name="State", values=state_colors) +
   scale_x_continuous(lim=c(1980, 2022)) +
   # Theme
   theme_bw() + my_theme +
@@ -213,6 +219,7 @@ g2
 
 # Read abalone
 ymax3 <- abalone %>% group_by(year) %>% summarize(val=sum(landings_n/1000)) %>% pull(val) %>% max()
+ncounties <- abalone %>% pull(county) %>% n_distinct()
 g3 <- ggplot(abalone, aes(x=year, y=landings_n/1000, fill=county)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
@@ -224,7 +231,7 @@ g3 <- ggplot(abalone, aes(x=year, y=landings_n/1000, fill=county)) +
   annotate(geom="text", label="Fishery\nclosure", x=2017.5, y=250, hjust=0, size=2.1) +
   # Labels
   labs(x="", y="Landings\n(1000s of abalone)", title="Recreational red abalone fishery", tag="C") +
-  scale_fill_discrete(name="California county\n(north to south)") +
+  scale_fill_manual(name="California county\n(north to south)", values=RColorBrewer::brewer.pal(ncounties, "Reds")) +
   scale_x_continuous(lim=c(1980, 2022)) +
   # Theme
   theme_bw() + my_theme +
