@@ -12,15 +12,46 @@ library(tidyverse)
 plotdir <- "figures"
 
 # Read data
-data_orig <- readRDS("data/landings/RECFIN_annual_rec_landings_by_state.Rds")
-
-# RECFIN species key
-spp_key <- wcfish::recfin_species
+data_orig <- readRDS("data/landings/RECFIN_annual_rec_landings_by_state.Rds") %>%
+  # Rename a few species
+  mutate(comm_name=recode(comm_name,
+                          "Pacific pompano (butterfish)"="Pacific pompano",
+                          "Pacific (chub) mackerel"="Pacific chub mackerel"))
 
 
 
 # Build data
 ################################################################################
+
+# Derive species key
+spp_key <- data_orig %>%
+  select(taxa_catg, comm_name, sci_name, level) %>% unique() %>%
+  arrange(taxa_catg, comm_name) %>%
+  # Merge some categories
+  mutate(taxa_catg_orig=taxa_catg,
+         taxa_catg=recode(taxa_catg_orig,
+                          "Tunas, mackerels, pompanos"="Large\npelagics",
+                          "Other large pelagics"="Large\npelagics",
+                          "Smelts"="Coastal\npelagics",
+                          "Sardines, herring, anchovies"="Coastal\npelagics",
+                          "Other coastal pelagics"="Coastal\npelagics",
+                          "Silversides"="Coastal\npelagics",
+                          "Gobies"="Gobies,\nblennies",
+                          "Blennies"="Gobies,\nblennies",
+                          "Shellfish"="Shellfish\nand other inverts",
+                          "Invertebrate"="Shellfish\nand other inverts",
+                          "Drums"="Drums, wrasses,\ngrunts, tilefishes",
+                          "Wrasses"="Drums, wrasses,\ngrunts, tilefishes",
+                          "Grunts"="Drums, wrasses,\ngrunts, tilefishes",
+                          "Tilefish"="Drums, wrasses,\ngrunts, tilefishes",
+                          "Eels"="Other fish",
+                          "Hagfish, lampreys"="Other fish",
+                          "Other"="Other fish",
+                          "Sturgeons"="Other fish",
+                          "Lizardfishes"="Other fish",
+                          "Groupers, sea basses"="Other fish"))
+
+table(spp_key$taxa_catg)
 
 # Build data
 data <- data_orig %>%
@@ -60,17 +91,15 @@ data <- data_orig %>%
   select(-use_yn) %>%
   complete(state, comm_name, period, fill=list(retained_n=NA)) %>%
   # Add taxa info
-  rename(comm_name_orig=comm_name) %>%
   left_join(spp_key) %>%
   # Filter to species
   filter(level=="species") %>%
-  # Fill category
-  mutate(category=ifelse(is.na(category), "Other", category)) %>%
   # Add state abbrevation
-  mutate(state_abbrev=recode(state,
+  mutate(state_abbrev=recode_factor(state,
                              "California"="CA",
                              "Oregon"="OR",
-                             "Washington"="WA"))
+                             "Washington"="WA",
+                             "Alaska"="AK"))
 
 # Before values
 before <- data %>%
@@ -91,10 +120,10 @@ data_use <- data %>%
 # Determine species order
 spp_order <- data_use %>%
   filter(period=="During") %>%
-  group_by(category, comm_name) %>%
-  summarize(pdiff_avg=mean(retained_n_pdiff)) %>%
+  group_by(taxa_catg, comm_name) %>%
+  summarize(pdiff_avg=mean(retained_n_pdiff, na.rm=T)) %>%
   ungroup() %>%
-  arrange(category, desc(pdiff_avg))
+  arrange(taxa_catg, pdiff_avg)
 
 # Order data
 data_use_ordered <- data_use %>%
@@ -123,7 +152,7 @@ my_theme <-  theme(axis.text=element_text(size=6),
 
 # Plot data
 g <- ggplot(data_use_ordered, aes(x=period, y=comm_name, fill=retained_n_pdiff_cap)) +
-  facet_grid(category~state, scales="free_y", space="free_y") +
+  facet_grid(taxa_catg~state, scales="free_y", space="free_y") +
   geom_raster() +
   # Plot points
   geom_point(data=data_use_ordered %>% filter(period=="Before" & retained_n>0),
@@ -149,17 +178,17 @@ ggsave(g, filename=file.path(plotdir, "Fig7_rec_impacts_long.png"),
 ################################################################################
 
 # Categories 1
-catgs1 <- c("Coastal pelagics", "Crabs", "Flatfish", "Other")
+catgs1 <- c("Rockfish", "Flatfish", "Sharks and rays", "Salmon")
 
 # Break data into two
 data1 <- data_use_ordered %>%
-  filter(category %in% catgs1)
+  filter(taxa_catg %in% catgs1)
 data2 <- data_use_ordered %>%
-  filter(!category %in% catgs1)
+  filter(!taxa_catg %in% catgs1)
 
 # Plot first panel
 g1 <- ggplot(data1, aes(x=period, y=comm_name, fill=retained_n_pdiff_cap)) +
-  facet_grid(category~state_abbrev, scales="free_y", space="free_y") +
+  facet_grid(taxa_catg~state_abbrev, scales="free_y", space="free_y") +
   geom_raster() +
   # Plot points
   geom_point(data=data1 %>% filter(period=="Before" & retained_n>0),
@@ -178,7 +207,7 @@ g1
 
 # Plot second panel
 g2 <- ggplot(data2, aes(x=period, y=comm_name, fill=retained_n_pdiff_cap)) +
-  facet_grid(category~state_abbrev, scales="free_y", space="free_y") +
+  facet_grid(taxa_catg~state_abbrev, scales="free_y", space="free_y") +
   geom_raster() +
   # Plot points
   geom_point(data=data2 %>% filter(period=="Before" & retained_n>0),

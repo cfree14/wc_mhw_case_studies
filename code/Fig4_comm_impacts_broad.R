@@ -97,6 +97,13 @@ data_group_ordered <- data_group %>%
 # Plot data
 ################################################################################
 
+# Colors
+ca_color <- RColorBrewer::brewer.pal(9, "Reds")[5]
+or_color <- RColorBrewer::brewer.pal(9, "Blues")[5]
+wa_color <- RColorBrewer::brewer.pal(9, "Greens")[5]
+ak_color <- RColorBrewer::brewer.pal(9, "Purples")[5]
+state_colors <- c(ca_color, or_color, wa_color, ak_color)
+
 # Theme
 my_theme <-  theme(axis.text=element_text(size=6),
                    axis.title=element_text(size=7),
@@ -130,7 +137,7 @@ g1 <- ggplot(data_tot %>% filter(state!="Alaska (below)"), aes(x=year, y=value_u
   # Labels
   lims(y=c(0,NA), x=c(2000,2020)) +
   labs(x="Year", y="Revenues\n(USD millions)", tag="A") +
-  scale_color_discrete(name="", drop=F) +
+  scale_color_manual(name="", values=state_colors, drop=F) +
   # Theme
   theme_bw() + my_theme +
   theme(legend.position = c(0.25, 0.83),
@@ -155,7 +162,7 @@ g2 <- ggplot(data_tot %>% filter(state=="Alaska (below)"), aes(x=year, y=value_u
   # Labels
   lims(y=c(0,NA), x=c(2000,2020)) +
   labs(x="Year", y="Revenues\n(USD millions)") +
-  scale_color_discrete(name="State", drop=F) +
+  scale_color_manual(name="", values=state_colors, drop=F) +
   # Theme
   theme_bw() + my_theme +
   theme(legend.position = "none")
