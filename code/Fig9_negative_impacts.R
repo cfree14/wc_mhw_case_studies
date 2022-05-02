@@ -104,7 +104,15 @@ sardine <- pacfin_orig %>%
 # Pacific cod data
 ################################################################################
 
+# Read data
+pcod_orig <- readRDS("/Users/cfree/Dropbox/Chris/UCSB/projects/wc_landings_data/data/akfin/processed/GFSA08_2003_2020_GOA_groundfish_landings_by_gear_subarea_species.Rds")
 
+# Build data
+pcod <- pcod_orig %>%
+  filter(species=="Pacific Cod" & subarea!="All Subareas" & gear!="All Gear") %>%
+  group_by(year, gear) %>%
+  summarize(value_usd=sum(value_usd)) %>%
+  ungroup()
 
 # Red abalone data
 ################################################################################
@@ -258,12 +266,25 @@ g4 <- ggplot(salmon, aes(x=year, y=abundance/1e3, linetype=type)) +
 g4
 
 # Pacific cod
-g5 <-ggplot() +
+ymax5 <- pcod %>% group_by(year) %>% summarize(val=sum(value_usd/1e6)) %>% pull(val) %>% max()
+g5 <-ggplot(pcod, aes(x=year, y=value_usd/1e6, fill=gear)) +
+  # Label heatwave
+  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90", show.legend = F) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax5*1.05, size=2.1) +
+  # Revenues
+  geom_bar(stat="identity", color="grey30", lwd=0.2) +
+  # Label closure
+  geom_segment(x=2020, xend=2020, y=0, yend=55, linetype="dotted") +
+  annotate(geom="text", label="Fishery\nclosure", x=2019.5, y=55, hjust=1, size=2.1) +
   # Labels
-  labs(x="", y="Something\n(something)", title="Commercial Pacific cod fishery", tag="E") +
+  labs(x="", y="Revenues\n(USD millions)", title="Commercial Pacific cod fishery", tag="E") +
   scale_x_continuous(lim=c(1980, 2022)) +
+  # Legend
+  scale_fill_manual(name="Gear", values=RColorBrewer::brewer.pal(3, "Purples")) +
   # Theme
-  theme_bw() + my_theme
+  theme_bw() + my_theme +
+  theme(legend.position = c(0.2, 0.8),
+        legend.key.size = unit(0.3, "cm"))
 g5
 
 # Merge

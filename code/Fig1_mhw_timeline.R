@@ -11,7 +11,7 @@ library(tidyverse)
 
 # Directories
 datadir <- "/Users/cfree/Dropbox/Chris/UCSB/projects/wc_cc_synthesis/data/environmental/indices/processed/"
-tanakadir <- "data/tanaka/raw/data"
+mhwdir <- "data/heatwaves/processed"
 plotdir <- "figures"
 
 # Read data
@@ -22,6 +22,8 @@ events_orig <- readRDS(file.path(datadir, "1983_2021_mhw_events.Rds"))
 # Meta-data
 # https://oceanview.pfeg.noaa.gov/erddap/info/cciea_OC_MHW_regions/index.html
 
+
+
 # Get US states and Mexico
 usa <- rnaturalearth::ne_states(country = "United States of America", returnclass = "sf")
 mexico <- rnaturalearth::ne_countries(country="Mexico", returnclass = "sf")
@@ -31,8 +33,28 @@ canada <- rnaturalearth::ne_countries(country="Canada", returnclass = "sf")
 # MHW raster data
 ################################################################################
 
-# Read data
-data <- raster(file.path(tanakadir, "8.5_1.nc"))
+# Read MHW rasters
+mhw_ras_orig <- readRDS(file=file.path(mhwdir, "COBE_1891_2022_NE_mhw_coverage.Rds"))
+
+# Dates use
+mhw_dates <- seq(ymd("2014-09-01"), ymd("2016-09-01"), by="4 months")[1:6]
+
+# Build data
+mhw_ras <- mhw_ras_orig %>%
+  # Reduce to dates of interest
+  filter(date %in% mhw_dates) %>%
+  # Reduce to MHW
+  filter(mhw_yn==T) %>%
+  # Recode date
+  mutate(date_chr=as.character(date),
+         date_label=recode_factor(date_chr,
+                                  "2014-09-01"="Sep 2014",
+                                  "2015-01-01"="Jan 2015",
+                                  "2015-05-01"="May 2015",
+                                  "2015-09-01"="Sep 2015",
+                                  "2016-01-01"="Jan 2016",
+                                  "2016-05-01"="May 2016"))
+
 
 # Format data
 ################################################################################
@@ -55,7 +77,6 @@ events <- events_orig %>%
 # Format SST data
 sst <- sst_orig %>%
   filter(date=="2015-09-01")
-
 
 
 
@@ -83,6 +104,8 @@ my_theme <-  theme(axis.text=element_text(size=7),
 g1 <- ggplot() +
   # Plot regional dividers
   # geom_hline(yintercept = c(49, 46, 42, 38.6, 34.448, 32.5)) +
+  # Plot raster
+  geom_tile(data=mhw_ras, mapping=aes(x=long_dd, lat_dd, fill=date_label), alpha=0.5) +
   # Plot states
   geom_sf(data=usa, fill="grey85", col="white", size=0.2) +
   geom_sf(data=mexico, fill="grey85", col="white", size=0.2) +
@@ -93,8 +116,7 @@ g1 <- ggplot() +
   # Labels
   labs(tag="A") +
   # Legend
-  scale_fill_gradient2(name="SST anamoly (°C)", midpoint=0, mid="white", high="darkred", low="darkblue") +
-  guides(fill = guide_colorbar(ticks.colour = "black", frame.colour = "black")) +
+  scale_fill_ordinal(name="MHW extent") +
   # Theme
   theme_bw() + my_theme +
   theme(axis.title=element_blank(),
