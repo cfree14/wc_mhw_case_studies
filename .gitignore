@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# Ignore CA landings data until you know its not confidential
+data/landings/canada/raw
+data/landings/canada/processed
+
