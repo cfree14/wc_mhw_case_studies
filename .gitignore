@@ -6,4 +6,5 @@
 # Ignore CA landings data until you know its not confidential
 data/landings/canada/raw
 data/landings/canada/processed
+data/landings/hms_cpfv_pr/confidential
 
