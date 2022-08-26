@@ -18,6 +18,9 @@ noaa_orig <- wcfish::noaa
 # Read PACFIN data
 pacfin_orig <- wcfish::pacfin_all1
 
+# Read DFO data
+dfo_orig <- readRDS("data/landings/canada/processed/2000_2020_dfo_pacific_landings.Rds")
+
 
 # Format PACFIN data
 ################################################################################

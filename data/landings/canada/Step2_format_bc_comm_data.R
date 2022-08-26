@@ -15,6 +15,10 @@ outdir <- "data/landings/canada/processed"
 # Read data
 data_orig <- readxl::read_excel(file.path(indir, "Pac Fisheries Data 2020-2000 for Sean Anderson.xlsx"), sheet="Combined Data")
 
+# Read species key
+spp_key <- readxl::read_excel(file.path(indir, "dfo_pacific_species_key.xlsx"))
+freeR::which_duplicated(spp_key$comm_name)
+anyDuplicated(spp_key$comm_name)
 
 
 # Format data
@@ -48,6 +52,8 @@ data <- data_orig %>%
   mutate(comm_name=recode(comm_name,
                           "(Blank)"="Unknown species",
                           'Bigeye thresher'='Bigeye thresher shark',
+                          "Black skate (sandpaper)"="Sandpaper skate",
+                          "Black rockfish, black bass"="Black rockfish",
                           'Box crabs'='Box crab',
                           'C-o sole'='C-O sole',
                           'C-o sole(popeyes)'='C-O sole',
@@ -57,24 +63,48 @@ data <- data_orig %>%
                           "Coho"="Coho salmon",
                           "Pink"="Pink salmon",
                           "Salmon trout"="Steelhead",
+                          "Other rockfish"="Rockfishes",
                           "Sockeye"="Sockeye salmon",
                           "Shortspine thornyhead rockfish, idiot"="Shortspine thornyhead",
+                          "Sixgill shark"="Bluntnose sixgill shark",
                           'Tanner crabs'='Tanner crab',
+                          "Tope shark"="Soupfin shark",
                           "Wrymouths"="Wrymouth",
-                          "Flatfishes//unspecified flounder"="Unspecified flounder"))
+                          "Flatfishes//unspecified flounder"="Unspecified flounder")) %>%
+  # Add scientific name
+  left_join(spp_key, by="comm_name") %>%
+  # Arrange
+  select(year:comm_name, sci_name, type, everything())
 
 # Inspect
 table(data$fishery)
 table(data$spp_group)
 sort(unique(data$comm_name))
 
+
+# If building key for first time
+if(F){
+
+  # Species key
+  spp_key <- data %>%
+    select(comm_name) %>%
+    unique() %>%
+    mutate(sci_name=harmonize_names(comm_name, "comm", "sci"))
+
+  # Export key
+  write.csv(spp_key, file=file.path(indir, "dfo_pacific_species_key.csv"), row.names=F)
+
+}
+
 # Species key
-spp_key <- data %>%
-  select(comm_name) %>%
-  unique() %>%
-  mutate(sci_name=harmonize_names(comm_name, "comm", "sci"))
+spp_key2 <- data %>%
+  select(comm_name, sci_name) %>%
+  unique()
 
-# Export key
-write.csv(spp_key, file=file.path(indir, "dfo_pacific_species_key.csv"), row.names=F)
+# Check names
+freeR::check_names(spp_key$sci_name)
+freeR::which_duplicated(spp_key$sci_name)
+freeR::which_duplicated(spp_key$comm_name)
 
-
+# Export data
+saveRDS(data, file=file.path(outdir, "2000_2020_dfo_pacific_landings.Rds"))

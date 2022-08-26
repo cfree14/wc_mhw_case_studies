@@ -27,7 +27,7 @@ shortbelly1 <- gemm_orig %>%
   # Summarize by total
   group_by(year) %>%
   summarize(landings_mt=sum(landings_mt),
-            discards_mt=sum(discards_mt)) %>%
+            discards_mt=sum(discards_mt_tot)) %>%
   ungroup() %>%
   # Gather
   gather(key="catch_type", value="catch_mt", 2:ncol(.)) %>%
@@ -123,6 +123,28 @@ bluefin <- bluefin_orig %>%
                               "Mexico"="Mexico"))
 
 
+# Shrimp
+################################################################################
+
+# Read PACFIN data
+pacfin_all5 <- wcfish::pacfin_all5
+
+# Format data
+shrimp <- pacfin_all5 %>%
+  # Reduce to shrimp/prawns
+  filter(grepl("prawn|shrimp", tolower(comm_name))) %>%
+  # Summarize
+  group_by(state, comm_name, sci_name, year) %>%
+  summarize(landings_mt=sum(landings_mt, na.rm = T),
+            value_usd=sum(revenues_usd, na.rm=T)) %>%
+  # Factor states
+  mutate(state=factor(state, levels=c("California", "Oregon", "Washington") %>% rev())) %>%
+  # Reduce to species of interest
+  filter(comm_name %in% c("Pacific pink shrimp", "Ridgeback prawn", "Spotted prawn")) %>%
+  # Make species label
+  mutate(spp_label=paste0(comm_name, "\n(", sci_name, ")"))
+
+
 # Plot data
 ################################################################################
 
@@ -202,38 +224,52 @@ g2 <- ggplot(squid, aes(x=year, y=value_usd/1e6, fill=port_complex)) +
         legend.text = element_text(size=5))
 g2
 
+# Shrimp
+g3 <- ggplot(shrimp, mapping=aes(x=year, y=value_usd/1e6, fill=state)) +
+  facet_wrap(~comm_name, scales = "free_y") +
+  # Mark MHW
+  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
+  # Bars
+  geom_bar(stat="identity", col="grey30", lwd=0.3) +
+  # Labels
+  labs(x="Year", y="Value\n(USD millions)", title="Commercial shrimp fisheries", tag="C") +
+  scale_fill_discrete(name="State") +
+  # Theme
+  theme_bw() + my_theme +
+  theme(legend.position = c(0.08, 0.8),
+        legend.key.size = unit(0.3, "cm"))
+g3
+
 # Bluefin
-ymax3 <- bluefin %>% group_by(year) %>% summarize(val=sum(landings_n/1e3)) %>% pull(val) %>% max()
-g3 <- ggplot(bluefin, aes(x=year, y=landings_n/1e3, fill=region)) +
+ymax4 <- bluefin %>% group_by(year) %>% summarize(val=sum(landings_n/1e3)) %>% pull(val) %>% max()
+g4 <- ggplot(bluefin, aes(x=year, y=landings_n/1e3, fill=region)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=ymax3*1.05, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax4*1.05, size=2.1) +
   # Plot PACFIN value
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Labels
   labs(x="", y="Landings\n(1000s of tuna)",
-       title="Recreational Pacific bluefin fishery", tag="C") +
+       title="Recreational Pacific bluefin tuna fishery", tag="D") +
   scale_fill_manual(name="Source waters", values=c(ca_color, mex_color)) +
   scale_x_continuous(lim=c(1980, 2022)) +
   # Theme
   theme_bw() + my_theme +
   theme(legend.position = c(0.2, 0.8),
         legend.key.size = unit(0.3, "cm"))
-g3
-
+g4
 
 # Merge
-g <- gridExtra::grid.arrange(g1, g2, g3, ncol=2)
+layout_matrix <- matrix(data=c(1,2,
+                               3,3,
+                               4,5), ncol=2, byrow=T)
+g <- gridExtra::grid.arrange(g1, g2, g3, g4,
+                             layout_matrix=layout_matrix)
 g
-
-
-
-# Plot data
-################################################################################
 
 # Export plot
 ggsave(g, filename=file.path(plotdir, "Fig10_positive_impacts.png"),
-       width=6.5, height=4.5, units="in", dpi=600)
+       width=6.5, height=6.5, units="in", dpi=600)
 
 
 

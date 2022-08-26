@@ -16,7 +16,7 @@ plotdir <- "figures"
 ################################################################################
 
 # Read PACFIN data
-pacfin_orig <- wcfish::pacfin_all6
+pacfin_orig <- wcfish::pacfin_all5
 
 # Format data
 data <- pacfin_orig %>%
