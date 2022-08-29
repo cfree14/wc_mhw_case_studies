@@ -12,23 +12,24 @@ library(tidyverse)
 plotdir <- "figures"
 outdir <- "data/landings"
 
-# Read NOAA data
-noaa_orig <- wcfish::noaa
+# The goal is to have a dataframe with the following columns
+# state, mgmt_group, comm_name, sci_name, level, year, landings_lb, value (ultimately in 2020 USD)
+
+# The steps for making this happen can be:
+# 1) Format each individually, getting as close as reasonable
+# 2) Merge, then inspect formatting
+
+
+# Format PACFIN data (CA/OR/WA)
+################################################################################
 
 # Read PACFIN data
 pacfin_orig <- wcfish::pacfin_all1
 
-# Read DFO data
-dfo_orig <- readRDS("data/landings/canada/processed/2000_2020_dfo_pacific_landings.Rds")
-
-
-# Format PACFIN data
-################################################################################
-
 # Format West Coast data
 pacfin <- pacfin_orig %>%
   # Simplify
-  select(state, mgmt_group, complex, comm_name, sci_name, year, landings_lb, value_usd) %>%
+  select(state, mgmt_group, comm_name, sci_name, year, landings_lb, value_usd) %>%
   # Fix some species
   mutate(comm_name=recode(comm_name,
                           "Native littleneck"="Pacific littleneck clam",
@@ -78,7 +79,6 @@ spp_key1 <- pacfin %>%
   count(mgmt_group, complex, comm_name, level) %>%
   arrange(mgmt_group, complex, comm_name)
 
-
 # Visualize coverage
 ggplot(pacfin %>% filter(level=="species") %>% select(state, mgmt_group, comm_name) %>% unique(),
        aes(y=comm_name, x=state)) +
@@ -92,8 +92,11 @@ ggplot(pacfin %>% filter(level=="species") %>% select(state, mgmt_group, comm_na
         axis.text.y=element_text(size=4))
 
 
-# Format NOAA data
+# Format NOAA data (AK)
 ################################################################################
+
+# Read NOAA data
+noaa_orig <- wcfish::noaa
 
 # Format Alaska data
 alaska <- noaa_orig %>%
@@ -175,6 +178,46 @@ data_out <- data %>%
   left_join(spp_key_use %>% select(comm_name, mgmt_group_use)) %>%
   select(state, mgmt_group, mgmt_group_use, comm_name, level, everything()) %>%
   arrange(state, mgmt_group, mgmt_group_use, comm_name, year)
+
+
+# Format DFO (BC)
+################################################################################
+
+# Read DFO data
+canada_orig <- readRDS("data/landings/canada/processed/2000_2020_dfo_pacific_landings.Rds")
+
+# 2020 exchange rate
+# 1 USD = 1.3415 CD
+# X USD = Y CD / 1.3415
+er <- 1.3415
+
+# Format data
+canada <- canada_orig %>%
+  # Rename
+  rename(level=type, mgmt_group=fishery, value_cd2020=value_2020) %>%
+  # Convert kg to lb
+  mutate(landings_lb=measurements::conv_unit(landings_kg, "kg", "lbs")) %>%
+  # Convert from 2020 Canadian dollars to 2020 US dollars
+  left_join(can_us_er_yr, by="year") %>%
+  mutate(value_usd2020=value_cd2020/er) %>%
+  # Arrange
+  select(comm_name, sci_name, level, year, landings_lb, value_usd2020, value_cd2020)
+
+# Check Canada species key
+spp_canada <- canada %>%
+  # Canada names
+  select(comm_name, sci_name,  level) %>%
+  unique() %>%
+  rename(comm_name_df=comm_name) %>%
+  # Check against USA names
+  filter(level=="species") %>%
+  left_join(spp_key_use %>% select(sci_name, comm_name), by="sci_name")
+
+
+
+# Merge and export
+################################################################################
+
 
 # Export
 saveRDS(data_out, file=file.path(outdir, "NOAA_PACFIN_1980_2021_commercial_landings.Rds"))
