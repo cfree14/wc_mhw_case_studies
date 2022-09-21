@@ -141,6 +141,7 @@ shrimp <- pacfin_all5 %>%
   mutate(state=factor(state, levels=c("California", "Oregon", "Washington") %>% rev())) %>%
   # Reduce to species of interest
   filter(comm_name %in% c("Pacific pink shrimp", "Ridgeback prawn", "Spotted prawn")) %>%
+  mutate(comm_name=recode(comm_name, "Spotted prawn"="Spot prawn")) %>%
   # Make species label
   mutate(spp_label=paste0(comm_name, "\n(", sci_name, ")"))
 
