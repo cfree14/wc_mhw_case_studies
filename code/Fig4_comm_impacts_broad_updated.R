@@ -187,7 +187,8 @@ g3 <- ggplot(data_group_ordered, aes(x=period, y=mgmt_group, fill=value_usd_pdif
   scale_fill_gradient2(name="% difference\nfrom pre-MHW\nrevenues",
                        midpoint = 0, mid="white", high="navy", low="darkred", na.value="grey90",
                        breaks=c(-100,0, 100, 200, 300),
-                       labels=c("-100", "0", "100", "200", ">300")) +
+                       labels=c("-100", "0", "100", "200", ">300"),
+                       lim=c(-100, NA)) +
   guides(size=guide_legend(order=1),
          fill = guide_colorbar(ticks.colour = "black", frame.colour = "black", order=2)) +
   # Theme
