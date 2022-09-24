@@ -187,7 +187,7 @@ ymax1 <- shortbelly %>% group_by(year) %>% summarize(val=sum(catch_mt)) %>% pull
 g1 <- ggplot(shortbelly, aes(x=year, y=catch_mt, fill=catch_type)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=ymax1*1.05, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax1*1.1, size=2.1) +
   # Plot GEMM datch
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Plot catch limit
@@ -214,7 +214,7 @@ ymax2 <- squid %>% group_by(year) %>% summarize(val=sum(value_usd/1e6)) %>% pull
 g2 <- ggplot(squid, aes(x=year, y=value_usd/1e6, fill=port_complex)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=ymax2*1.05, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax2*1.1, size=2.1) +
   # Plot PACFIN value
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Labels
@@ -231,11 +231,21 @@ g2 <- ggplot(squid, aes(x=year, y=value_usd/1e6, fill=port_complex)) +
         legend.text = element_text(size=5))
 g2
 
+# Create points for MHW labels
+shrimp_ymaxs <- shrimp %>%
+  group_by(comm_name, year) %>%
+  summarize(value_usd=sum(value_usd)) %>%
+  ungroup() %>%
+  group_by(comm_name) %>%
+  arrange(desc(value_usd)) %>%
+  slice(1) %>% ungroup()
+
 # Shrimp
 g3 <- ggplot(shrimp, mapping=aes(x=year, y=value_usd/1e6, fill=state)) +
   facet_wrap(~comm_name, scales = "free_y") +
   # Mark MHW
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
+  geom_text(data=shrimp_ymaxs, mapping=aes(y=value_usd/1e6*1.1, x=2015), label="MHW", size=2.1, inherit.aes = F) +
   # Bars
   geom_bar(stat="identity", col="grey30", lwd=0.3) +
   # Labels
@@ -252,7 +262,7 @@ ymax4 <- bluefin %>% group_by(year) %>% summarize(val=sum(landings_n/1e3)) %>% p
 g4 <- ggplot(bluefin, aes(x=year, y=landings_n/1e3, fill=region)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=ymax4*1.05, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax4*1.1, size=2.1) +
   # Plot PACFIN value
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Labels

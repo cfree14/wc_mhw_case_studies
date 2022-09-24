@@ -145,7 +145,10 @@ salmon <- salmon_orig %>%
   # Recode
   mutate(type=recode(type,
                      "preseason"="Preseason forecast",
-                     "postseason"="Postseason estimtate"))
+                     "postseason"="Postseason estimtate")) %>%
+  # Record lowest
+  group_by(type) %>%
+  mutate(rank=rank(abundance))
 
 # Plot data
 ################################################################################
