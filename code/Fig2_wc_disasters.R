@@ -167,7 +167,7 @@ g <- ggplot(stats, aes(x=disaster_year1, y=species,
 g
 
 # Export plot
-ggsave(g, filename=file.path(plotdir, "Fig3_wc_disasters.png"),
+ggsave(g, filename=file.path(plotdir, "Fig2_wc_disasters.png"),
        width=6.5, height=4, units="in", dpi=600)
 
 

@@ -303,7 +303,7 @@ g <- gridExtra::grid.arrange(g1, g2, g3, g4, g5,
 g
 
 # Export plot
-ggsave(g, filename=file.path(plotdir, "Fig10_positive_impacts.png"),
+ggsave(g, filename=file.path(plotdir, "Fig9_positive_impacts.png"),
        width=6.5, height=6.5, units="in", dpi=600)
 
 
