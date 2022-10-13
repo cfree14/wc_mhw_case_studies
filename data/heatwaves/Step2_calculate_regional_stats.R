@@ -40,6 +40,9 @@ region <- region_orig %>%
   arrange(region_code) %>%
   mutate(region_km2=sf::st_area(.) %>% as.numeric() / 1000^2)
 
+# Export
+saveRDS(region, file=file.path(shpdir, "regions.Rds"))
+
 
 
 # Find region for each cell
@@ -87,12 +90,12 @@ data <- data_orig %>%
 # Build stats
 tot_area_km2 <- sum(region$region_km2)
 stats1 <- data %>%
-  filter(!is.na(mhw_c)) %>%
   group_by(year, date) %>%
-  summarize(area_km2=sum(area_km2),
-            intensity_c=mean(mhw_c)) %>%
+  summarize(area_km2=sum(area_km2[!is.na(mhw_c)]),
+            intensity_c=mean(mhw_c, na.rm=T)) %>%
   ungroup() %>%
-  mutate(coverage=area_km2/tot_area_km2)
+  mutate(coverage=area_km2/tot_area_km2,
+         intensity_c=ifelse(is.na(intensity_c), 0, intensity_c))
 
 # Plot
 ggplot(stats1, aes(x=date, y=area_km2/1e6, color=intensity_c)) +
@@ -104,6 +107,9 @@ ggplot(stats1, aes(x=date, y=area_km2/1e6, color=intensity_c)) +
   scale_color_gradientn(name="Intensity (°C)", colors=RColorBrewer::brewer.pal(9, "YlOrRd")) +
   # Theme
   theme_bw()
+
+# Export
+saveRDS(stats1, file=file.path(outdir, "COBE_1891_2022_NE_mhw_stats_overall.Rds"))
 
 
 # Analysis
@@ -144,6 +150,8 @@ ggplot(stats, aes(x=date, y=region_code, fill=coverage)) +
   # Theme
   theme_bw()
 
+# Export
+saveRDS(stats, file=file.path(outdir, "COBE_1891_2022_NE_mhw_stats_region.Rds"))
 
 
 
