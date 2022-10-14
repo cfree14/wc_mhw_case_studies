@@ -106,7 +106,7 @@ data2 <- data_ordered %>%
 # Plot data
 g <- ggplot(data, aes(x=period, y=comm_name, fill=value_usd_pdiff_cap)) +
   facet_grid(mgmt_group~state_abbrev, space="free_y", scale="free_y") +
-  geom_raster() +
+  geom_tile() +
   # Labels
   labs(x="Heatwave period", y="") +
   # Legend
@@ -141,8 +141,8 @@ my_theme <- theme(axis.text=element_text(size=6),
 
 # Plot groundfish
 g1 <- ggplot(data1, aes(x=period, y=comm_name, fill=value_usd_pdiff_cap)) +
-  facet_grid(mgmt_group~state_abbrev, space="free_y", scale="free_y") +
-  geom_raster() +
+  facet_grid(mgmt_group~state_abbrev, space="free_y", scale="free_y", drop=F) +
+  geom_tile() +
   # Before points
   geom_point(data=data1 %>% filter(period=="Before"),
              mapping=aes(x=period, y=comm_name, size=value_usd/1e6)) +
@@ -160,8 +160,8 @@ g1
 
 # Plot non-groundfish
 g2 <- ggplot(data2, aes(x=period, y=comm_name, fill=value_usd_pdiff_cap)) +
-  facet_grid(mgmt_group~state_abbrev, space="free_y", scale="free_y") +
-  geom_raster() +
+  facet_grid(mgmt_group~state_abbrev, space="free_y", scale="free_y", drop=F) +
+  geom_tile() +
   # Before points
   geom_point(data=data2 %>% filter(period=="Before"),
              mapping=aes(x=period, y=comm_name, size=value_usd/1e6)) +

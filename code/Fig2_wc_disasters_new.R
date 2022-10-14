@@ -93,6 +93,11 @@ ak_regions <- data %>%
 # Plot data
 ################################################################################
 
+# Rect data
+rect_data <- expand.grid(state=levels(data$state),
+                         xmin=2013.5,
+                         xmax=2016.5)
+
 # Setup theme
 my_theme <-  theme(axis.text=element_text(size=7),
                    axis.title=element_blank(),
@@ -113,7 +118,8 @@ my_theme <-  theme(axis.text=element_text(size=7),
 g <- ggplot(data, aes(x=year, y=fishery, color=cause, shape=status)) +
   facet_grid(fishery_type~state, space="free_y", scales="free_y") +
   # Plot heatwave
-  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=10, fill="grey90", inherit.aes = F) +
+  geom_rect(data=rect_data, mapping=aes(xmin=xmin, xmax=xmax), ymin=0, ymax=10, fill="grey90", inherit.aes = F) +
+  # geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=10, fill="grey90", inherit.aes = F) +
   # Plot disasters
   geom_point() +
   # Labels
@@ -124,6 +130,7 @@ g <- ggplot(data, aes(x=year, y=fishery, color=cause, shape=status)) +
   scale_color_manual(name="Cause", values=c("red", "blue", "grey30")) +
   # Theme
   theme_bw() + my_theme
+g
 
 # Export plot
 ggsave(g, filename=file.path(plotdir, "Fig2_wc_disasters_new.png"),

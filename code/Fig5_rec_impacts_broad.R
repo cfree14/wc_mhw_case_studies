@@ -10,46 +10,39 @@ library(tidyverse)
 
 # Directories
 plotdir <- "figures"
+datadir <- "data/landings"
 
 # Read data
-data_orig <- readRDS("data/landings/RECFIN_annual_rec_landings_by_state.Rds")
+data_orig <- readRDS("data/landings/annual_rec_landings_by_state.Rds") %>%
+  mutate(comm_name=recode(comm_name, "Steelhead"="Steelhead trout"))
+
+# Read species key
+spp_key <- readxl::read_excel(file.path(datadir, "rec_species_key.xlsx")) %>%
+  mutate(taxa_catg=recode(taxa_catg,
+                          "Drums, wrasses, grunts, tilefishes"="Drums, wrasses,\ngrunts, tilefishes"))
+freeR::which_duplicated(spp_key$comm_name)
+freeR::which_duplicated(spp_key$sci_name)
+freeR::check_names(spp_key$sci_name)
+
+
+# Check species
+################################################################################
+
+# Species key
+spp_key_check <- data_orig %>%
+  select(comm_name, sci_name, level) %>% unique()
+#write.csv(spp_key, file=file.path(datadir, "rec_species_key.csv"), row.names = F)
+
+# Confirm that all species are in key
+# If they aren't, manually add new species to the key
+spp_key_check$comm_name[!spp_key_check$comm_name %in% spp_key$comm_name]
 
 
 # Build data
 ################################################################################
 
-# Derive species key
-spp_key <- data_orig %>%
-  select(taxa_catg, comm_name, sci_name, level) %>% unique() %>%
-  arrange(taxa_catg, comm_name) %>%
-  # Merge some categories
-  mutate(taxa_catg_orig=taxa_catg,
-         taxa_catg=recode(taxa_catg_orig,
-                          "Tunas, mackerels, pompanos"="Large pelagics",
-                          "Other large pelagics"="Large pelagics",
-                          "Smelts"="Coastal pelagics",
-                          "Sardines, herring, anchovies"="Coastal pelagics",
-                          "Other coastal pelagics"="Coastal pelagics",
-                          "Silversides"="Coastal pelagics",
-                          "Gobies"="Gobies, blennies",
-                          "Blennies"="Gobies, blennies",
-                          "Shellfish"="Shellfish\nand other inverts",
-                          "Invertebrate"="Shellfish\nand other inverts",
-                          "Drums"="Drums, wrasses,\ngrunts, tilefishes",
-                          "Wrasses"="Drums, wrasses,\ngrunts, tilefishes",
-                          "Grunts"="Drums, wrasses,\ngrunts, tilefishes",
-                          "Tilefish"="Drums, wrasses,\ngrunts, tilefishes",
-                          "Eels"="Other fish",
-                          "Hagfish, lampreys"="Other fish",
-                          "Other"="Other fish",
-                          "Sturgeons"="Other fish",
-                          "Lizardfishes"="Other fish",
-                          "Groupers, sea basses"="Other fish"))
-
-table(spp_key$taxa_catg)
-
 # Build data
-data <- data_orig %>%
+data_tot <- data_orig %>%
   # Reduce to years of interest
   filter(year %in% 2000:2020) %>%
   # Summarize
@@ -57,16 +50,22 @@ data <- data_orig %>%
   summarize(retained_n=sum(retained_n)) %>%
   ungroup() %>%
   # Format state
-  mutate(state=recode(state, "California"="California (below)"),
-         state=factor(state, levels=c("California (below)", "Oregon", "Washington", "Alaska") %>% rev()))
+  mutate(state=recode(state,
+                      "California"="California (below)",
+                      "British Columbia"="British Columbia (below)"),
+         state=factor(state, levels=c("California (below)", "Oregon", "Washington", "British Columbia (below)", "Alaska") %>% rev()))
 
 # Build period averages
-data_avgs <- data %>%
+data_avgs <- data_tot %>%
   # Reduce to years of interest
   filter(year %in% 2011:2019) %>%
   # Add period
   mutate(period=cut(year, breaks=c(2010, 2013, 2016, 2020), labels=c("Before", "During", "After"), right=T)) %>%
-  # Summarize
+  # Summarize totals by year
+  group_by(state, period, year) %>%
+  summarise(retained_n=sum(retained_n)) %>%
+  ungroup() %>%
+  # Summarize average totals by period
   group_by(state, period) %>%
   summarize(retained_n_avg=mean(retained_n)) %>%
   ungroup() %>%
@@ -79,16 +78,19 @@ data_avgs <- data %>%
 
 # Build state-period-group averages
 data_group <- data_orig %>%
-  # Update taxa category
-  select(-taxa_catg) %>%
-  left_join(spp_key %>% select(comm_name, taxa_catg)) %>%
+  # Add taxa category
+  left_join(spp_key %>% select(comm_name, taxa_catg), by=c("comm_name")) %>%
   # Reduce to years of interest
   filter(year %in% 2011:2019) %>%
   # Add period
   mutate(period=cut(year, breaks=c(2010, 2013, 2016, 2020), labels=c("Before", "During", "After"), right=T)) %>%
+  # Summarize totals by year
+  group_by(state, taxa_catg, period, year) %>%
+  summarise(retained_n=sum(retained_n)) %>%
+  ungroup() %>%
   # Summarize
   group_by(state, taxa_catg, period) %>%
-  summarize(retained_n=sum(retained_n)) %>%
+  summarize(retained_n=mean(retained_n)) %>%
   ungroup() %>%
   # Complete periods
   complete(state, taxa_catg, period, fill=list(retained_n=NA)) %>%
@@ -100,7 +102,7 @@ data_group <- data_orig %>%
   ungroup() %>%
   # Recode state
   mutate(state=recode_factor(state,
-                      "California"="CA", "Oregon"="OR", "Washington"="WA", "Alaska"="AK"))
+                      "California"="CA", "Oregon"="OR", "Washington"="WA", "British Columbia"="BC", "Alaska"="AK"))
 
 # Group order
 group_order <- data_group %>%
@@ -125,16 +127,17 @@ data_group_ordered <- data_group %>%
 ca_color <- RColorBrewer::brewer.pal(9, "Reds")[5]
 or_color <- RColorBrewer::brewer.pal(9, "Blues")[5]
 wa_color <- RColorBrewer::brewer.pal(9, "Greens")[5]
+bc_color <- "goldenrod1" # RColorBrewer::brewer.pal(9, "Oranges")[5]
 ak_color <- RColorBrewer::brewer.pal(9, "Purples")[5]
-state_colors <- c(ca_color, or_color, wa_color, ak_color) %>% rev()
+state_colors <- c(ca_color, or_color, wa_color, bc_color, ak_color) %>% rev()
 
 # Theme
 my_theme <-  theme(axis.text=element_text(size=6),
                    axis.title=element_text(size=7),
                    legend.text=element_text(size=6),
-                   legend.title=element_text(size=8),
-                   strip.text=element_text(size=8),
-                   plot.tag=element_text(size=9),
+                   legend.title=element_text(size=7),
+                   strip.text=element_text(size=7),
+                   plot.tag=element_text(size=8),
                    plot.title = element_blank(),
                    # Gridlines
                    panel.grid.major = element_blank(),
@@ -146,15 +149,15 @@ my_theme <-  theme(axis.text=element_text(size=6),
 
 
 # Plot totals by state and year
-ymax1 <- data %>% filter(state!="California (below)") %>% pull(retained_n) %>% max()/1e6
-g1 <- ggplot(data %>% filter(state!="California (below)"), aes(x=year, y=retained_n/1e6, color=state)) +
+ymax1 <- data_tot %>% filter(!grepl("below", state)) %>% pull(retained_n) %>% max()/1e6
+g1 <- ggplot(data_tot %>% filter(!grepl("below", state)), aes(x=year, y=retained_n/1e6, color=state)) +
   # Plot heatwave
-  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90", inherit.aes = F) +
+  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey95", inherit.aes = F) +
   annotate(geom="text", label="MHW", x=2015, y=ymax1*1.1, size=2.1) +
   # Plot landings
   geom_line(alpha=0.5, lwd=0.6) +
   # Plot period averages
-  geom_segment(data=data_avgs %>% filter(state!="California (below)"), mapping=aes(x=yr1,
+  geom_segment(data=data_avgs %>% filter(!grepl("below", state)), mapping=aes(x=yr1,
                                                                                   xend=yr2,
                                                                                   y=retained_n_avg/1e6,
                                                                                   yend=retained_n_avg/1e6,
@@ -165,21 +168,21 @@ g1 <- ggplot(data %>% filter(state!="California (below)"), aes(x=year, y=retaine
   scale_color_manual(name="", values=state_colors, drop=F) +
   # Theme
   theme_bw() + my_theme +
-  theme(legend.position = c(0.25, 0.48),
+  theme(legend.position = c(0.35, 0.48),
         legend.key.size = unit(0.3, "cm"),
         axis.title.x = element_blank())
 g1
 
 # Plot totals by state and year
-ymax2 <- data %>% filter(state=="California (below)") %>% pull(retained_n) %>% max()/1e6
-g2 <- ggplot(data %>% filter(state=="California (below)"), aes(x=year, y=retained_n/1e6, color=state)) +
+ymax2 <- data_tot %>% filter(grepl("below", state)) %>% pull(retained_n) %>% max()/1e6
+g2 <- ggplot(data_tot %>% filter(grepl("below", state)), aes(x=year, y=retained_n/1e6, color=state)) +
   # Plot heatwave
-  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90", inherit.aes = F) +
+  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey95", inherit.aes = F) +
   annotate(geom="text", label="MHW", x=2015, y=ymax2*1.1, size=2.1) +
   # Plot landings
   geom_line(alpha=0.5, lwd=0.6) +
   # Plot period averages
-  geom_segment(data=data_avgs %>% filter(state=="California (below)"), mapping=aes(x=yr1,
+  geom_segment(data=data_avgs %>% filter(grepl("below", state)), mapping=aes(x=yr1,
                                                                                    xend=yr2,
                                                                                    y=retained_n_avg/1e6,
                                                                                    yend=retained_n_avg/1e6,
@@ -225,5 +228,5 @@ g
 
 # Export
 ggsave(g, filename=file.path(plotdir, "Fig5_rec_impacts_broad.png"),
-       width=6.5, height=3, units="in", dpi=600)
+       width=6.5, height=4, units="in", dpi=600)
 

@@ -25,6 +25,9 @@ salmon_orwa_orig <- wcfish::recfin_cte5 # OR: 2001-2021, WA: 2004-2021
 # Read ADFG data
 adfg_orig <- readRDS("/Users/cfree/Dropbox/Chris/UCSB/projects/wc_landings_data/data/adfg/processed/ADFG_1996_2000_statewide_landings_discards.Rds") # 1996-2020
 
+# Read DFO data
+dfo_orig <- readRDS("data/landings/canada/processed/DFO_2012_2022_irec_rec_catch_estimates.Rds")
+
 
 # Format data
 ################################################################################
@@ -46,8 +49,7 @@ recfin_salmon_ca <- salmon_ca_orig %>%
   summarize(retained_n=sum(retained_n)) %>%
   ungroup() %>%
   # Add source
-  mutate(source="RECFIN CTE007",
-         taxa_catg="Salmon")
+  mutate(source="RECFIN CTE007")
 
 # Build OR/WA salmon data
 recfin_salmon_orwa <- salmon_orwa_orig %>%
@@ -56,12 +58,11 @@ recfin_salmon_orwa <- salmon_orwa_orig %>%
   summarize(retained_n=sum(retained_n)) %>%
   ungroup() %>%
   # Add source
-  mutate(source="RECFIN CTE005",
-         taxa_catg="Salmon")
+  mutate(source="RECFIN CTE005")
 
 # Build salmon
 recfin_salmon <- bind_rows(recfin_salmon_ca, recfin_salmon_orwa) %>%
-  select(source, state, mode, taxa_catg, comm_name, sci_name, level, year, retained_n) %>%
+  select(source, state, mode, comm_name, sci_name, level, year, retained_n) %>%
   arrange(mode, comm_name, year)
 
 # Inspect
@@ -78,7 +79,7 @@ recfin_other <- recfin_orig %>%
   # Reduce to USA waters (not Canada or Mexico)
   filter(!water_area %in% c("Canada", "Mexico")) %>%
   # Summarize
-  group_by(state, mode, taxa_catg, comm_name, sci_name, level, year) %>%
+  group_by(state, mode, comm_name, sci_name, level, year) %>%
   summarize(retained_n=sum(catch_n)) %>%
   ungroup() %>%
   # Add source
@@ -120,19 +121,7 @@ cdfw <- cpfv_ca_orig %>%
                           "Common dolphinfish"="Dolphinfish",
                           "California barracuda"="Pacific barracuda")) %>%
   # Remove salmon
-  filter(!grepl("salmon", tolower(comm_name))) %>%
-  # Add taxa group
-  left_join(recfin_other %>% select(comm_name, taxa_catg) %>% unique(), by="comm_name") %>%
-  mutate(taxa_catg=ifelse(comm_name=="Croaker", "Drums", taxa_catg),
-         taxa_catg=ifelse(comm_name=="Rockfish", "Rockfish", taxa_catg),
-         taxa_catg=ifelse(comm_name=="Sturgeon", "Sturgeons", taxa_catg),
-         taxa_catg=ifelse(comm_name %in% c("Flatfish", "Sanddab"), "Flatfish", taxa_catg),
-         taxa_catg=ifelse(comm_name %in% c("Skipjack tuna", "Yellowfin tuna"), "Tunas, mackerels, pompanos", taxa_catg),
-         taxa_catg=ifelse(comm_name %in% c("Striped marlin", "Wahoo"), "Tunas, mackerels, pompanos", taxa_catg),
-         taxa_catg=ifelse(comm_name %in% c("Fish", "Invertebrate"), "Other", taxa_catg))
-
-# Check taxa groups
-cdfw %>% filter(is.na(taxa_catg)) %>% pull(comm_name) %>% unique() %>% sort()
+  filter(!grepl("salmon", tolower(comm_name)))
 
 
 # Compare CA data with RECFIN data
@@ -157,6 +146,7 @@ cdfw_ca <- cdfw %>%
   left_join(recfin_ca)
 
 # Plot
+# Red = CPFV data; blue = RecFIN data
 g <- ggplot(cdfw_ca, aes(x=year, y=retained_n_cdfw/1e6)) +
   geom_line(color="red") +
   geom_line(data=cdfw_ca, mapping=aes(x=year,y=retained_n_recfin/1e6), color="blue")
@@ -191,7 +181,41 @@ adfg <- adfg_orig %>%
          mode="Unknown") %>%
   # Arrange
   select(-c(catch_n, discards_n, mgmt_group)) %>%
-  select(source, state, mode, taxa_catg, comm_name, sci_name, level, year, retained_n, everything())
+  select(source, state, mode, comm_name, sci_name, level, year, retained_n, everything())
+
+
+# Step 5. Format BC data
+##########################################
+
+# Build DFO data
+dfo <- dfo_orig %>%
+  # Reduce to kept landings
+  filter(disposition=="Kept") %>%
+  # Rename
+  rename(mode=method,
+         retained_n=estimate) %>%
+  # Recode mode
+  mutate(mode=recode(mode,
+                     "Angling from boat"="Private/Rental and Party/Charter Boats",
+                     "Angling from shore"="Beach/Bank",
+                     "Beach digging or hand picking"="Beach/Bank",
+                     "Dive-based or other"="Unknown",
+                     "Shellfish trapping from boat"="Private/Rental and Party/Charter Boats",
+                     "Shellfish trapping from shore or dock"="Beach/Bank")) %>%
+  # Add a few
+  mutate(source="DFO",
+         state="British Columbia") %>%
+  # Summarize (and arrange)
+  group_by(source, state, mode, comm_name, sci_name, level, year) %>%
+  summarize(retained_n=sum(retained_n, na.rm=T)) %>%
+  ungroup() %>%
+  # Remove incomplete years (2012 and 2022)
+  filter(year %in% 2013:2021)
+
+# Inspect
+table(dfo$mode)
+
+
 
 
 # Build species key
@@ -199,16 +223,18 @@ adfg <- adfg_orig %>%
 
 # Individual keys
 salmon_spp <- recfin_salmon %>%
-  select(taxa_catg, comm_name, sci_name, level) %>% unique()
+  select(comm_name, sci_name, level) %>% unique()
 recfin_spp <- recfin_other %>%
-  select(taxa_catg, comm_name, sci_name, level) %>% unique()
+  select(comm_name, sci_name, level) %>% unique()
 adfg_spp <- adfg_orig %>%
-  select(taxa_catg, comm_name, sci_name, level) %>% unique()
+  select(comm_name, sci_name, level) %>% unique()
 cdfw_spp <- cdfw %>%
-  select(taxa_catg, comm_name, sci_name, level) %>% unique()
+  select(comm_name, sci_name, level) %>% unique()
+dfo_spp <- dfo %>%
+  select(comm_name, sci_name, level) %>% unique()
 
 # Merge
-spp_key <- bind_rows(salmon_spp, recfin_spp, adfg_spp, cdfw_spp) %>%
+spp_key <- bind_rows(salmon_spp, recfin_spp, adfg_spp, cdfw_spp, dfo_spp) %>%
   unique()
 
 # Check for duplicates
@@ -220,10 +246,11 @@ freeR::which_duplicated(spp_key$sci_name) #  "Oncorhynchus mykiss" "Oncorhynchus
 ################################################################################
 
 # Build merged data
-data <- bind_rows(recfin_other, recfin_salmon, cdfw, adfg) %>%
+data <- bind_rows(recfin_other, recfin_salmon, cdfw, adfg, dfo) %>%
   # Arrange
-  select(source, state, mode, taxa_catg, comm_name, sci_name, level, year, retained_n, everything()) %>%
-  arrange(source, state, mode, taxa_catg, comm_name, year) %>%
+  select(-taxa_catg) %>%
+  select(source, state, mode, comm_name, sci_name, level, year, retained_n, everything()) %>%
+  arrange(source, state, mode, comm_name, year) %>%
   # Remove incomplete CA data
   filter(! (state=="California" & (year>2019 | year < 2005)))
 
@@ -237,7 +264,7 @@ table(data$state)
 table(data$mode)
 
 # Export data
-saveRDS(data, file=file.path(outdir, "RECFIN_annual_rec_landings_by_state.Rds"))
+saveRDS(data, file=file.path(outdir, "annual_rec_landings_by_state.Rds"))
 
 
 

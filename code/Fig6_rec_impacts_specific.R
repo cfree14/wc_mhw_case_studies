@@ -152,8 +152,8 @@ my_theme <-  theme(axis.text=element_text(size=6),
 
 # Plot data
 g <- ggplot(data_use_ordered, aes(x=period, y=comm_name, fill=retained_n_pdiff_cap)) +
-  facet_grid(taxa_catg~state, scales="free_y", space="free_y") +
-  geom_raster() +
+  facet_grid(taxa_catg~state, scales="free_y", space="free_y", drop=F) +
+  geom_tile() +
   # Plot points
   geom_point(data=data_use_ordered %>% filter(period=="Before" & retained_n>0),
              mapping=aes(x=period, y=comm_name, size=retained_n/1e3), inherit.aes = F) +
@@ -188,8 +188,8 @@ data2 <- data_use_ordered %>%
 
 # Plot first panel
 g1 <- ggplot(data1, aes(x=period, y=comm_name, fill=retained_n_pdiff_cap)) +
-  facet_grid(taxa_catg~state_abbrev, scales="free_y", space="free_y") +
-  geom_raster() +
+  facet_grid(taxa_catg~state_abbrev, scales="free_y", space="free_y", drop=F) +
+  geom_tile() +
   # Plot points
   geom_point(data=data1 %>% filter(period=="Before" & retained_n>0),
              mapping=aes(x=period, y=comm_name, size=retained_n/1e3), inherit.aes = F) +
@@ -207,8 +207,8 @@ g1
 
 # Plot second panel
 g2 <- ggplot(data2, aes(x=period, y=comm_name, fill=retained_n_pdiff_cap)) +
-  facet_grid(taxa_catg~state_abbrev, scales="free_y", space="free_y") +
-  geom_raster() +
+  facet_grid(taxa_catg~state_abbrev, scales="free_y", space="free_y", drop=F) +
+  geom_tile() +
   # Plot points
   geom_point(data=data2 %>% filter(period=="Before" & retained_n>0),
              mapping=aes(x=period, y=comm_name, size=retained_n/1e3), inherit.aes = F) +
