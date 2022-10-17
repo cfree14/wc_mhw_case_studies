@@ -10,48 +10,36 @@ library(tidyverse)
 
 # Directories
 plotdir <- "figures"
+datadir <- "data/landings"
 
 # Read data
-data_orig <- readRDS("data/landings/RECFIN_annual_rec_landings_by_state.Rds") %>%
-  # Rename a few species
-  mutate(comm_name=recode(comm_name,
-                          "Pacific pompano (butterfish)"="Pacific pompano",
-                          "Pacific (chub) mackerel"="Pacific chub mackerel"))
+data_orig <- readRDS("data/landings/annual_rec_landings_by_state.Rds") %>%
+  mutate(comm_name=recode(comm_name, "Steelhead"="Steelhead trout"))
 
+# Read species key
+spp_key <- readxl::read_excel(file.path(datadir, "rec_species_key.xlsx")) %>%
+  mutate(taxa_catg=recode(taxa_catg,
+                          "Drums, wrasses, grunts, tilefishes"="Drums, wrasses,\ngrunts, tilefishes"))
+freeR::which_duplicated(spp_key$comm_name)
+freeR::which_duplicated(spp_key$sci_name)
+freeR::check_names(spp_key$sci_name)
+
+
+# Check species
+################################################################################
+
+# Species key
+spp_key_check <- data_orig %>%
+  select(comm_name, sci_name, level) %>% unique()
+#write.csv(spp_key, file=file.path(datadir, "rec_species_key.csv"), row.names = F)
+
+# Confirm that all species are in key
+# If they aren't, manually add new species to the key
+spp_key_check$comm_name[!spp_key_check$comm_name %in% spp_key$comm_name]
 
 
 # Build data
 ################################################################################
-
-# Derive species key
-spp_key <- data_orig %>%
-  select(taxa_catg, comm_name, sci_name, level) %>% unique() %>%
-  arrange(taxa_catg, comm_name) %>%
-  # Merge some categories
-  mutate(taxa_catg_orig=taxa_catg,
-         taxa_catg=recode(taxa_catg_orig,
-                          "Tunas, mackerels, pompanos"="Large\npelagics",
-                          "Other large pelagics"="Large\npelagics",
-                          "Smelts"="Coastal\npelagics",
-                          "Sardines, herring, anchovies"="Coastal\npelagics",
-                          "Other coastal pelagics"="Coastal\npelagics",
-                          "Silversides"="Coastal\npelagics",
-                          "Gobies"="Gobies,\nblennies",
-                          "Blennies"="Gobies,\nblennies",
-                          "Shellfish"="Shellfish\nand other inverts",
-                          "Invertebrate"="Shellfish\nand other inverts",
-                          "Drums"="Drums, wrasses,\ngrunts, tilefishes",
-                          "Wrasses"="Drums, wrasses,\ngrunts, tilefishes",
-                          "Grunts"="Drums, wrasses,\ngrunts, tilefishes",
-                          "Tilefish"="Drums, wrasses,\ngrunts, tilefishes",
-                          "Eels"="Other fish",
-                          "Hagfish, lampreys"="Other fish",
-                          "Other"="Other fish",
-                          "Sturgeons"="Other fish",
-                          "Lizardfishes"="Other fish",
-                          "Groupers, sea basses"="Other fish"))
-
-table(spp_key$taxa_catg)
 
 # Build data
 data <- data_orig %>%
@@ -63,8 +51,10 @@ data <- data_orig %>%
   complete(state, comm_name, year, fill=list(retained_n=0)) %>%
   # Summarize by year (across modes)
   group_by(state, comm_name, year) %>%
-  summarize(retained_n=sum(retained_n)) %>%
+  summarize(retained_n=sum(retained_n, na.rm=T)) %>%
   ungroup() %>%
+  # Limit BC to
+  filter(state!="British Columbia" | (state=="British Columbia" & year>2012)) %>% 
   # Add period
   mutate(period=cut(year, breaks=c(2010, 2013, 2016, 2020), labels=c("Before", "During", "After"), right=T)) %>%
   # Summarize by state, species, period
@@ -99,7 +89,12 @@ data <- data_orig %>%
                              "California"="CA",
                              "Oregon"="OR",
                              "Washington"="WA",
-                             "Alaska"="AK"))
+                             "British Columbia"="BC",
+                             "Alaska"="AK")) %>%
+  # Rename a few species
+  mutate(comm_name=recode(comm_name,
+                          "Pacific pompano (butterfish)"="Pacific pompano",
+                          "Pacific (chub) mackerel"="Pacific chub mackerel"))
 
 # Before values
 before <- data %>%

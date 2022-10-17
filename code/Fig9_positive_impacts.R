@@ -149,8 +149,10 @@ shrimp <- pacfin_all5 %>%
 ################################################################################
 
 # Read data
-boc_orig <- read.csv("data/case_study_data/bocaccio/boc.csv")
-
+boc_orig <- readRDS("data/case_study_data/bocaccio/BOR-MCMC-rec.rds")
+boc <- boc_orig %>%
+  mutate(year=as.numeric(year)) %>%
+  rename(recruitment=value)
 
 # Plot data
 ################################################################################
@@ -277,18 +279,20 @@ g4 <- ggplot(bluefin, aes(x=year, y=landings_n/1e3, fill=region)) +
 g4
 
 # Bocaccio
-ymax5 <- boc_orig %>% pull(recruitment) %>% max()
-g5 <- ggplot(boc_orig, aes(x=year, y=recruitment)) +
+ymax5 <- boc %>% pull(recruitment) %>% max()* 1000
+g5 <- ggplot(boc, aes(x=year, y=recruitment*1000, group=year)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=ymax5*1.1, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax5*1.5, size=2.1) +
   # Plot recruitment
-  geom_line() +
+  geom_boxplot(fill="grey80", color="grey30", outlier.size=0.2, size=0.2) +
   # Scale
-  scale_y_continuous(trans="log10") +
+  scale_y_continuous(trans="log10",
+                     breaks=10^c(0:8),
+                     labels=parse(text=paste0("10^", 0:8))) +
   scale_x_continuous(breaks=seq(1930,2020,10)) +
   # Labels
-  labs(x="", y="Recruitment\n(1000s of age-1 fish)",
+  labs(x="", y="Recruitment\n(number of age-1 fish)",
        title="Bocaccio rockfish bycatch fishery", tag="E") +
   # Theme
   theme_bw() + my_theme
