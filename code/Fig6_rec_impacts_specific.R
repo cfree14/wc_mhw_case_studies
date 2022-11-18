@@ -54,7 +54,7 @@ data <- data_orig %>%
   summarize(retained_n=sum(retained_n, na.rm=T)) %>%
   ungroup() %>%
   # Limit BC to
-  filter(state!="British Columbia" | (state=="British Columbia" & year>2012)) %>% 
+  filter(state!="British Columbia" | (state=="British Columbia" & year>2012)) %>%
   # Add period
   mutate(period=cut(year, breaks=c(2010, 2013, 2016, 2020), labels=c("Before", "During", "After"), right=T)) %>%
   # Summarize by state, species, period
@@ -94,7 +94,15 @@ data <- data_orig %>%
   # Rename a few species
   mutate(comm_name=recode(comm_name,
                           "Pacific pompano (butterfish)"="Pacific pompano",
-                          "Pacific (chub) mackerel"="Pacific chub mackerel"))
+                          "Pacific (chub) mackerel"="Pacific chub mackerel")) %>%
+  # Format categories
+  mutate(taxa_catg=recode(taxa_catg,
+                          "Coastal pelagics"="Coastal\npelagics",
+                          "Gobies, blennies"="Gobies,\nblennies",
+                          "Large pelagics"="Large\npelagics",
+                          "Roundfish"="Roundfish,\nsculpins",
+                          "Sculpins"="Roundfish,\nsculpins",
+                          "Other invertebrates"="Other fish"))
 
 # Before values
 before <- data %>%
@@ -122,6 +130,7 @@ spp_order <- data_use %>%
 
 # Order data
 data_use_ordered <- data_use %>%
+  # Order common names
   mutate(comm_name=factor(comm_name, levels=spp_order$comm_name))
 
 
@@ -129,12 +138,12 @@ data_use_ordered <- data_use %>%
 ################################################################################
 
 # Setup theme
-my_theme <-  theme(axis.text=element_text(size=6),
+my_theme <-  theme(axis.text=element_text(size=5.5),
                    axis.title=element_text(size=8),
                    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                    legend.text=element_text(size=6),
                    legend.title=element_text(size=8),
-                   strip.text=element_text(size=8),
+                   strip.text=element_text(size=6.5),
                    plot.title=element_text(size=10),
                    # Gridlines
                    panel.grid.major = element_blank(),
@@ -173,7 +182,7 @@ g
 ################################################################################
 
 # Categories 1
-catgs1 <- c("Rockfish", "Flatfish", "Sharks and rays", "Salmon")
+catgs1 <- c("Rockfish", "Flatfish", "Sharks, skates, rays", "Salmon", "Crustaceans")
 
 # Break data into two
 data1 <- data_use_ordered %>%

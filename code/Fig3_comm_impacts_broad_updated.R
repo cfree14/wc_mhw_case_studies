@@ -20,6 +20,9 @@ data_orig <- readRDS(data, file=file.path(datadir, "WC_1980_2021_commercial_land
 # Build data
 ################################################################################
 
+# Cap
+pdiff_max <- 200
+
 # Totals by state and year
 data_tot <- data_orig %>%
   # Reduce
@@ -67,7 +70,7 @@ data_group <- data_orig %>%
   group_by(state, mgmt_group) %>%
   mutate(value_usd_pre=value_usd[period=="Before"],
          value_usd_pdiff=(value_usd - value_usd_pre) / value_usd_pre * 100,
-         value_usd_pdiff_cap=pmin(value_usd_pdiff, 300)) %>%
+         value_usd_pdiff_cap=pmin(value_usd_pdiff, pdiff_max)) %>%
   ungroup() %>%
   # Format state
   filter(state!="At-Sea") %>%
@@ -95,6 +98,7 @@ group_order <- data_group %>%
 # Order data
 data_group_ordered <- data_group %>%
   mutate(mgmt_group_use=factor(mgmt_group, levels=group_order$mgmt_group))
+
 
 # Plot data
 ################################################################################
@@ -186,8 +190,8 @@ g3 <- ggplot(data_group_ordered, aes(x=period, y=mgmt_group, fill=value_usd_pdif
                         breaks=c(10, 100, 200, 500, 1000, 2000)) +
   scale_fill_gradient2(name="% difference\nfrom pre-MHW\nrevenues",
                        midpoint = 0, mid="white", high="navy", low="darkred", na.value="grey90",
-                       breaks=c(-100,0, 100, 200, 300),
-                       labels=c("-100", "0", "100", "200", ">300"),
+                       breaks=c(-100, 0, 100, pdiff_max),
+                       labels=c("-100", "0", "100", ">200"),
                        lim=c(-100, NA)) +
   guides(size=guide_legend(order=1),
          fill = guide_colorbar(ticks.colour = "black", frame.colour = "black", order=2)) +

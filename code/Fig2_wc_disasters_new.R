@@ -83,6 +83,11 @@ table(data$sector)
 table(data$mgmt_type)
 table(data$status)
 
+# Stats
+stats <- data %>%
+  count(state, fishery_type, fishery, cause, status, year)
+
+
 # Inspect
 ak_regions <- data %>%
   select(state, region) %>%
@@ -115,7 +120,7 @@ my_theme <-  theme(axis.text=element_text(size=7),
                    legend.background = element_rect(fill=alpha('blue', 0)))
 
 # Plot
-g <- ggplot(data, aes(x=year, y=fishery, color=cause, shape=status)) +
+g <- ggplot(stats, aes(x=year, y=fishery, shape=status, color=cause, size=n)) +
   facet_grid(fishery_type~state, space="free_y", scales="free_y") +
   # Plot heatwave
   geom_rect(data=rect_data, mapping=aes(xmin=xmin, xmax=xmax), ymin=0, ymax=10, fill="grey90", inherit.aes = F) +
@@ -127,7 +132,9 @@ g <- ggplot(data, aes(x=year, y=fishery, color=cause, shape=status)) +
   scale_x_continuous(breaks=seq(1995, 2020, 5)) +
   # Legends
   scale_shape_manual(name="Status", values=c(3, 4, 16)) +
+  scale_size_continuous(name="# of impacted fisheries", breaks=c(1,5,10)) +
   scale_color_manual(name="Cause", values=c("red", "blue", "grey30")) +
+  guides(shape = guide_legend(order = 1), color = guide_legend(order = 2), size = guide_legend(order = 3)) +
   # Theme
   theme_bw() + my_theme
 g
@@ -137,3 +144,21 @@ ggsave(g, filename=file.path(plotdir, "Fig2_wc_disasters_new.png"),
        width=6.5, height=3, units="in", dpi=600)
 
 
+
+# # Plot
+# g <- ggplot(data, aes(x=year, y=fishery, color=cause, shape=status)) +
+#   facet_grid(fishery_type~state, space="free_y", scales="free_y") +
+#   # Plot heatwave
+#   geom_rect(data=rect_data, mapping=aes(xmin=xmin, xmax=xmax), ymin=0, ymax=10, fill="grey90", inherit.aes = F) +
+#   # geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=10, fill="grey90", inherit.aes = F) +
+#   # Plot disasters
+#   geom_point() +
+#   # Labels
+#   labs(x="Year", y="") +
+#   scale_x_continuous(breaks=seq(1995, 2020, 5)) +
+#   # Legends
+#   scale_shape_manual(name="Status", values=c(3, 4, 16)) +
+#   scale_color_manual(name="Cause", values=c("red", "blue", "grey30")) +
+#   # Theme
+#   theme_bw() + my_theme
+# g

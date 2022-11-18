@@ -284,8 +284,10 @@ g5 <- ggplot(boc, aes(x=year, y=recruitment*1000, group=year)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
   annotate(geom="text", label="MHW", x=2015, y=ymax5*1.5, size=2.1) +
+  annotate(geom="text", label="Note log-scale on y-axis",
+           hjust=0, x=1935, y=ymax5*1.5, size=2.1, fontface="italic") +
   # Plot recruitment
-  geom_boxplot(fill="grey80", color="grey30", outlier.size=0.2, size=0.2) +
+  geom_boxplot(fill="grey80", color="grey30", outlier.shape=NA, size=0.2) +
   # Scale
   scale_y_continuous(trans="log10",
                      breaks=10^c(0:8),

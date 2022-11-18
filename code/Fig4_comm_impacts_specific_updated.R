@@ -65,7 +65,9 @@ data <- data_orig %>%
                                "Shrimp"="Crustaceans",
                                "Coastal pelagic species"="Coastal\npelagics",
                                "Highly migratory species"="Highly migratory\nspecies",
-                               "Miscellaneous groundfish"="Other\ngroundfish"))
+                               "Miscellaneous groundfish"="Other\ngroundfish")) %>%
+  # Remove species with zero catch before heatwave (impossible to calculate percent change)
+  filter(value_usd_pre>0)
 
 
 # Order data
@@ -151,6 +153,9 @@ g1 <- ggplot(data1, aes(x=period, y=comm_name, fill=value_usd_pdiff_cap)) +
   # Legend
   scale_size_continuous(name="Mean annual\npre-MHW revenues\n(USD millions)") +
   scale_fill_gradient2(name="% difference\nfrom pre-MHW\nrevenues",
+                       lim=c(-100, 200),
+                       breaks=seq(-100, 200, 100),
+                       labels=c("-100", "0", "100", ">200"),
                        midpoint = 0, mid="white", high="navy", low="darkred", na.value="grey90") +
   guides(fill = guide_colorbar(ticks.colour = "black", frame.colour = "black")) +
   # Theme
@@ -170,6 +175,9 @@ g2 <- ggplot(data2, aes(x=period, y=comm_name, fill=value_usd_pdiff_cap)) +
   # Legend
   scale_size_continuous(name="Mean annual\npre-MHW revenues\n(USD millions)") +
   scale_fill_gradient2(name="% difference\nfrom pre-MHW\nrevenues",
+                       lim=c(-100, 200),
+                       breaks=seq(-100, 200, 100),
+                       labels=c("-100", "0", "100", ">200"),
                        midpoint = 0, mid="white", high="navy", low="darkred", na.value="grey90") +
   guides(size=guide_legend(order=1),
          fill = guide_colorbar(ticks.colour = "black", frame.colour = "black", order=2)) +
@@ -178,7 +186,7 @@ g2 <- ggplot(data2, aes(x=period, y=comm_name, fill=value_usd_pdiff_cap)) +
 g2
 
 # Merge
-g <- gridExtra::grid.arrange(g1, g2, nrow=1, widths=c(0.45, 0.55))
+g <- gridExtra::grid.arrange(g1, g2, nrow=1, widths=c(0.43, 0.57))
 g
 
 # Export
