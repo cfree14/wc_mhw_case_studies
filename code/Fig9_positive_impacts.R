@@ -184,23 +184,18 @@ my_theme <-  theme(axis.text=element_text(size=7),
                    legend.background = element_rect(fill=alpha('blue', 0)))
 
 
-# Shortbelly
-ymax1 <- shortbelly %>% group_by(year) %>% summarize(val=sum(catch_mt)) %>% pull(val) %>% max()
-g1 <- ggplot(shortbelly, aes(x=year, y=catch_mt, fill=catch_type)) +
+# Bluefin
+ymax1 <- bluefin %>% group_by(year) %>% summarize(val=sum(landings_n/1e3)) %>% pull(val) %>% max()
+g1 <- ggplot(bluefin, aes(x=year, y=landings_n/1e3, fill=region)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
   annotate(geom="text", label="MHW", x=2015, y=ymax1*1.1, size=2.1) +
-  # Plot GEMM datch
+  # Plot PACFIN value
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
-  # Plot catch limit
-  annotate(geom="text", x=2008, y=50, label="50 mt limit", color="grey30", vjust=-0.4, hjust=0, size=2.2) +
-  geom_segment(x=2008, xend=2015, y=50, yend=50,  color="grey30") +
-  annotate(geom="text", x=2017, y=500, label="500 mt limit", color="grey30", vjust=-0.4, hjust=1, size=2.2) +
-  geom_segment(x=2015, xend=2020, y=500, yend=500,  color="grey30") +
-  # Plot PACFIN catch
   # Labels
-  labs(x="", y="\nCatch (mt)", title="Shortbelly rockfish bycatch fishery", tag="A") +
-  scale_fill_manual(name="Catch type", values=c("grey60", "grey20")) +
+  labs(x="", y="Landings\n(1000s of tuna)",
+       title="Recreational Pacific bluefin tuna fishery", tag="A") +
+  scale_fill_manual(name="Source waters", values=c(ca_color, mex_color)) +
   scale_x_continuous(lim=c(1980, 2022)) +
   # Theme
   theme_bw() + my_theme +
@@ -252,40 +247,22 @@ g3 <- ggplot(shrimp, mapping=aes(x=year, y=value_usd/1e6, fill=state)) +
   geom_bar(stat="identity", col="grey30", lwd=0.3) +
   # Labels
   labs(x="Year", y="Value\n(USD millions)", title="Commercial shrimp fisheries", tag="C") +
-  scale_fill_discrete(name="State") +
+  scale_fill_manual(name="State",
+                    values=c(wa_color, or_color, ca_color)) +
   # Theme
   theme_bw() + my_theme +
   theme(legend.position = c(0.08, 0.8),
         legend.key.size = unit(0.3, "cm"))
 g3
 
-# Bluefin
-ymax4 <- bluefin %>% group_by(year) %>% summarize(val=sum(landings_n/1e3)) %>% pull(val) %>% max()
-g4 <- ggplot(bluefin, aes(x=year, y=landings_n/1e3, fill=region)) +
-  # Label heatwave
-  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=ymax4*1.1, size=2.1) +
-  # Plot PACFIN value
-  geom_bar(stat="identity", color="grey30", lwd=0.2) +
-  # Labels
-  labs(x="", y="Landings\n(1000s of tuna)",
-       title="Recreational Pacific bluefin tuna fishery", tag="D") +
-  scale_fill_manual(name="Source waters", values=c(ca_color, mex_color)) +
-  scale_x_continuous(lim=c(1980, 2022)) +
-  # Theme
-  theme_bw() + my_theme +
-  theme(legend.position = c(0.2, 0.8),
-        legend.key.size = unit(0.3, "cm"))
-g4
-
 # Bocaccio
-ymax5 <- boc %>% pull(recruitment) %>% max()* 1000
-g5 <- ggplot(boc, aes(x=year, y=recruitment*1000, group=year)) +
+ymax4 <- boc %>% pull(recruitment) %>% max()* 1000
+g4 <- ggplot(boc, aes(x=year, y=recruitment*1000, group=year)) +
   # Label heatwave
   geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
-  annotate(geom="text", label="MHW", x=2015, y=ymax5*1.5, size=2.1) +
+  annotate(geom="text", label="MHW", x=2015, y=ymax4*1.5, size=2.1) +
   annotate(geom="text", label="Note log-scale on y-axis",
-           hjust=0, x=1935, y=ymax5*1.5, size=2.1, fontface="italic") +
+           hjust=0, x=1935, y=ymax4*1.5, size=2.1, fontface="italic") +
   # Plot recruitment
   geom_boxplot(fill="grey80", color="grey30", outlier.shape=NA, size=0.2) +
   # Scale
@@ -295,9 +272,33 @@ g5 <- ggplot(boc, aes(x=year, y=recruitment*1000, group=year)) +
   scale_x_continuous(breaks=seq(1930,2020,10)) +
   # Labels
   labs(x="", y="Recruitment\n(number of age-1 fish)",
-       title="Bocaccio rockfish bycatch fishery", tag="E") +
+       title="Bocaccio rockfish bycatch fishery", tag="D") +
   # Theme
   theme_bw() + my_theme
+#g4
+
+# Shortbelly
+ymax5 <- shortbelly %>% group_by(year) %>% summarize(val=sum(catch_mt)) %>% pull(val) %>% max()
+g5 <- ggplot(shortbelly, aes(x=year, y=catch_mt, fill=catch_type)) +
+  # Label heatwave
+  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
+  annotate(geom="text", label="MHW", x=2015, y=ymax5*1.1, size=2.1) +
+  # Plot GEMM datch
+  geom_bar(stat="identity", color="grey30", lwd=0.2) +
+  # Plot catch limit
+  annotate(geom="text", x=2008, y=50, label="50 mt limit", color="grey30", vjust=-0.4, hjust=0, size=2.2) +
+  geom_segment(x=2008, xend=2015, y=50, yend=50,  color="grey30") +
+  annotate(geom="text", x=2017, y=500, label="500 mt limit", color="grey30", vjust=-0.4, hjust=1, size=2.2) +
+  geom_segment(x=2015, xend=2020, y=500, yend=500,  color="grey30") +
+  # Plot PACFIN catch
+  # Labels
+  labs(x="", y="\nCatch (mt)", title="Shortbelly rockfish bycatch fishery", tag="E") +
+  scale_fill_manual(name="Catch type", values=c("grey60", "grey20")) +
+  scale_x_continuous(lim=c(1980, 2022)) +
+  # Theme
+  theme_bw() + my_theme +
+  theme(legend.position = c(0.2, 0.8),
+        legend.key.size = unit(0.3, "cm"))
 g5
 
 # Merge
@@ -306,7 +307,7 @@ layout_matrix <- matrix(data=c(1,2,
                                4,5), ncol=2, byrow=T)
 g <- gridExtra::grid.arrange(g1, g2, g3, g4, g5,
                              layout_matrix=layout_matrix)
-g
+#g
 
 # Export plot
 ggsave(g, filename=file.path(plotdir, "Fig9_positive_impacts.png"),

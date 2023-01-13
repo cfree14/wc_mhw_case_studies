@@ -117,9 +117,6 @@ data_group_ordered <- data_group %>%
   mutate(taxa_catg=factor(taxa_catg, levels=group_order$taxa_catg))
 
 
-
-
-
 # Plot data
 ################################################################################
 
@@ -127,8 +124,8 @@ data_group_ordered <- data_group %>%
 ca_color <- RColorBrewer::brewer.pal(9, "Reds")[5]
 or_color <- RColorBrewer::brewer.pal(9, "Blues")[5]
 wa_color <- RColorBrewer::brewer.pal(9, "Greens")[5]
-bc_color <- "goldenrod1" # RColorBrewer::brewer.pal(9, "Oranges")[5]
-ak_color <- RColorBrewer::brewer.pal(9, "Purples")[5]
+ak_color <- "goldenrod1" # RColorBrewer::brewer.pal(9, "Oranges")[5]
+bc_color <- RColorBrewer::brewer.pal(9, "Purples")[5]
 state_colors <- c(ca_color, or_color, wa_color, bc_color, ak_color) %>% rev()
 
 # Theme

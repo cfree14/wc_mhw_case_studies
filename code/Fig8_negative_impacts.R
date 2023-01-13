@@ -201,27 +201,28 @@ g1 <- ggplot(closures, aes(x=date, y=lat_dd, fill=status)) +
   # Labels
   labs(x="Date", y=" \nLatitude (°N)", tag="A", title="Commercial Dungeness crab fishery") +
   # Legends
-  scale_fill_manual(name="Season status", values=c("grey90", "pink", "orange", "darkred", "coral", "navy"), na.translate = F) +
+  scale_fill_manual(name="Season status", values=c("grey90", "pink", "orange", "darkred", "magenta3", "navy"), na.translate = F) +
   # Theme
   theme_bw() + my_theme +
   theme(legend.key.size = unit(0.4, "cm"))
 g1
 
-# Pacific sardine
-ymax2 <- sardine %>% group_by(year) %>% summarize(val=sum(value_usd/1e6)) %>% pull(val) %>% max()
-g2 <- ggplot(sardine, aes(x=year, y=value_usd/1e6, fill=state)) +
+# Pacific cod
+ymax2 <- pcod %>% group_by(year) %>% summarize(val=sum(value_usd/1e6)) %>% pull(val) %>% max()
+g2 <-ggplot(pcod, aes(x=year, y=value_usd/1e6, fill=gear)) +
   # Label heatwave
-  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
+  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90", show.legend = F) +
   annotate(geom="text", label="MHW", x=2015, y=ymax2*1.05, size=2.1) +
-  # Value
+  # Revenues
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Label closure
-  geom_segment(x=2015, xend=2015, y=0, yend=6, linetype="dotted") +
-  annotate(geom="text", label="Fishery\nclosure", x=2015.5, y=6, hjust=0, size=2.1) +
+  geom_segment(x=2020, xend=2020, y=0, yend=55, linetype="dotted") +
+  annotate(geom="text", label="Fishery\nclosure", x=2019.5, y=55, hjust=1, size=2.1) +
   # Labels
-  labs(x="", y="Revenues\n(USD millions)", title="Commercial Pacific sardine fishery", tag="B") +
-  scale_fill_manual(name="State", values=state_colors) +
+  labs(x="", y="Revenues\n(USD millions)", title="Commercial Pacific cod fishery", tag="B") +
   scale_x_continuous(lim=c(1980, 2022)) +
+  # Legend
+  scale_fill_manual(name="Gear", values=RColorBrewer::brewer.pal(3, "Purples")) +
   # Theme
   theme_bw() + my_theme +
   theme(legend.position = c(0.2, 0.8),
@@ -250,6 +251,7 @@ g3 <- ggplot(abalone, aes(x=year, y=landings_n/1000, fill=county)) +
         legend.key.size = unit(0.3, "cm"))
 g3
 
+
 # Chinook salmon
 ymax4 <- max(salmon$abundance/1e3, na.rm=T)
 g4 <- ggplot(salmon, aes(x=year, y=abundance/1e3, linetype=type)) +
@@ -268,27 +270,27 @@ g4 <- ggplot(salmon, aes(x=year, y=abundance/1e3, linetype=type)) +
         legend.key.size = unit(0.3, "cm"))
 g4
 
-# Pacific cod
-ymax5 <- pcod %>% group_by(year) %>% summarize(val=sum(value_usd/1e6)) %>% pull(val) %>% max()
-g5 <-ggplot(pcod, aes(x=year, y=value_usd/1e6, fill=gear)) +
+# Pacific sardine
+ymax5 <- sardine %>% group_by(year) %>% summarize(val=sum(value_usd/1e6)) %>% pull(val) %>% max()
+g5 <- ggplot(sardine, aes(x=year, y=value_usd/1e6, fill=state)) +
   # Label heatwave
-  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90", show.legend = F) +
+  geom_rect(xmin=2013.5, xmax=2016.5, ymin=0, ymax=Inf, fill="grey90") +
   annotate(geom="text", label="MHW", x=2015, y=ymax5*1.05, size=2.1) +
-  # Revenues
+  # Value
   geom_bar(stat="identity", color="grey30", lwd=0.2) +
   # Label closure
-  geom_segment(x=2020, xend=2020, y=0, yend=55, linetype="dotted") +
-  annotate(geom="text", label="Fishery\nclosure", x=2019.5, y=55, hjust=1, size=2.1) +
+  geom_segment(x=2015, xend=2015, y=0, yend=6, linetype="dotted") +
+  annotate(geom="text", label="Fishery\nclosure", x=2015.5, y=6, hjust=0, size=2.1) +
   # Labels
-  labs(x="", y="Revenues\n(USD millions)", title="Commercial Pacific cod fishery", tag="E") +
+  labs(x="", y="Revenues\n(USD millions)", title="Commercial Pacific sardine fishery", tag="E") +
+  scale_fill_manual(name="State", values=state_colors) +
   scale_x_continuous(lim=c(1980, 2022)) +
-  # Legend
-  scale_fill_manual(name="Gear", values=RColorBrewer::brewer.pal(3, "Purples")) +
   # Theme
   theme_bw() + my_theme +
   theme(legend.position = c(0.2, 0.8),
         legend.key.size = unit(0.3, "cm"))
 g5
+
 
 # Merge
 layout_matrix <- matrix(data=c(1,1,
