@@ -49,8 +49,8 @@ g1 <- ggplot(data1, aes(x=year, y=value)) +
   # Data
   geom_line() +
   # Labels
-  labs(x="Year", y="Mean larval abundance\n(CalCOFI Lines 80 & 90 Spring)", tag="A") +
-  scale_x_continuous(breaks=seq(1950,2020,10), lim=range(data$year)) +
+  labs(x="Year", y="Larval abundance\n(CalCOFI Lines 80 & 90 Spring)", tag="A") +
+  scale_x_continuous(breaks=seq(1950,2020,5), lim=range(data$year)) +
   # Theme
   theme_bw() + my_theme
 g1
@@ -65,7 +65,7 @@ g2 <- ggplot(data2, aes(x=year, y=exp(value))) +
   geom_line() +
   # Labels
   labs(x="Year", y="Young of the year abundance\n(RREAS S. California survey)", tag="B") +
-  scale_x_continuous(breaks=seq(1950,2020,10), lim=range(data$year)) +
+  scale_x_continuous(breaks=seq(1950,2020,5), lim=range(data$year)) +
   # Theme
   theme_bw() + my_theme
 g2
