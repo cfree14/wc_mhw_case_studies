@@ -109,6 +109,19 @@ squid <- pacfin_orig %>%
 
 count(squid, state, port_complex) %>% arrange(state)
 
+# Squid stats for paper
+squid_stats <- squid %>%
+  # Annual totals
+  group_by(state, year) %>%
+  summarise(landings_mt=sum(landings_mt)) %>%
+  ungroup() %>%
+  # Period totals
+  filter(year > 2010) %>%
+  mutate(period=ifelse(year %in% 2016:2020, "2016-2020", "2011-2015")) %>%
+  group_by(state, period) %>%
+  summarise(landings_mt=sum(landings_mt)) %>%
+  ungroup()
+
 # Bluefin tuna
 ################################################################################
 
