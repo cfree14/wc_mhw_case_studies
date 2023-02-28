@@ -202,11 +202,29 @@ alaska1 <- alaska %>%
 freeR::complete(alaska1) # should only be missing sci name and one value
 
 
+# Format GOA AK data
+################################################################################
+
+# Read data
+ak_orig <- readRDS("data/landings/goa/processed/2011_2019_ak_goa_by_species.Rds")
+
+# Format data
+ak <- ak_orig %>%
+  # Rename
+  rename(mgmt_group=category) %>%
+  # Add columns
+  mutate(state="Alaska",
+         level=ifelse(!is.na(sci_name), "species", "group")) %>%
+  # Arrange columns
+  select(-species_name) %>%
+  select(state, mgmt_group, comm_name, sci_name, level, year, value_usd, everything())
+
+
 # Merge Alaska and West Coast data
 ################################################################################
 
 # Merge
-usa <- bind_rows(pacfin, alaska1) %>%
+usa <- bind_rows(pacfin, ak) %>%
   # Arrange
   select(state, mgmt_group, comm_name, sci_name, level, year, landings_lb, value_usd, everything()) %>%
   arrange(state, mgmt_group, comm_name, sci_name, level, year) %>%
@@ -217,12 +235,23 @@ usa <- bind_rows(pacfin, alaska1) %>%
                           "C-o sole"="C-O sole",
                           "Pacific whiting"="Pacific hake",
                           "Bairdi tanner crab"="Tanner crab",
-                          "Rock sole"="Southern rock sole")) %>%
+                          "Rock sole"="Southern rock sole",
+                          "Spot shrimp"="Spotted prawn")) %>%
   # Fix a few scientific names
   mutate(sci_name=recode(sci_name,
                          "Raja binoculata"="Beringraja binoculata",
                          "Raja rhina"="Beringraja rhina",
-                         "Raja stellulata"="Beringraja stellulata"))
+                         "Raja stellulata"="Beringraja stellulata",
+                         "Theragra chalcogramma"="Gadus chalcogrammus")) %>%
+  # Format management group
+  mutate(mgmt_group=case_when(grepl("Sebastes", sci_name) | comm_name=="Other rockfish" ~ "Rockfish",
+                              grepl("flounder|sole|halibut", comm_name) ~ "Flatfish",
+                              grepl("skate|grenadier", comm_name) ~ "Other groundfish",
+                              comm_name %in% c("Lingcod", "Pacific cod", "Atka mackerel", "Walleye pollock", "Sablefish", "Kelp greenling") ~ "Roundfish",
+                              comm_name %in% c("Geoduck") ~ "Bivalves",
+
+                              T ~ mgmt_group),
+         mgmt_group=recode(mgmt_group, "Groundfish"="Other groundfish"))
 
 # Inspect USA data
 freeR::complete(usa)
@@ -251,6 +280,7 @@ spp_key_usa <- usa %>%
   arrange(mgmt_group, comm_name)
 freeR::which_duplicated(spp_key_usa$comm_name) # must be zero
 freeR::which_duplicated(spp_key_usa$sci_name) # must be zero
+table(spp_key_usa$mgmt_group)
 
 # #
 # write.csv(spp_key, file.path(outdir, "NOAA_PACFIN_comm_landings_spp_key_temp.csv"), row.names = F)
@@ -319,7 +349,15 @@ freeR::which_duplicated(spp_canada$comm_name)
 ################################################################################
 
 # Merge data
-data1 <- bind_rows(usa, canada)
+data1 <- bind_rows(usa, canada) %>%
+  # Fix dusky rockfish
+  mutate(comm_name=case_when(sci_name=="Sebastes variabilis" ~ "Light dusky rockfish",
+                             sci_name=="Sebastes ciliatus" ~ "Dark dusky rockfish",
+                             T ~ comm_name)) %>%
+  # Fix starry skate
+  mutate(comm_name=case_when(sci_name=="Amblyraja radiata" ~ "Thorny skate",
+                             sci_name=="Beringraja stellulata" ~ "Starry skate",
+                             T ~ comm_name))
 
 # Species key
 spp_key <- data1 %>%
@@ -336,6 +374,9 @@ data2 <- data1 %>%
   select(-mgmt_group) %>%
   rename(mgmt_group=mgmt_group_use) %>%
   select(state, mgmt_group, comm_name, everything())
+
+# Get missing mgmt groups
+missing <- data2 %>% filter(is.na(mgmt_group)) %>% select(mgmt_group, comm_name, sci_name)  %>% unique()
 
 # Inspect
 freeR::complete(data2)

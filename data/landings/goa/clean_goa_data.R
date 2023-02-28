@@ -33,6 +33,9 @@ data1 <- data_orig1 %>%
 # Inspect
 str(data1)
 
+# Export data
+saveRDS(data1, file=file.path(outdir, "2004_2021_ak_goa_total.Rds"))
+
 # Format data
 data2 <- data_orig2 %>%
   janitor::clean_names("snake") %>%
@@ -40,6 +43,9 @@ data2 <- data_orig2 %>%
 
 # Inspect
 str(data2)
+
+# Export data
+saveRDS(data2, file=file.path(outdir, "2011_2019_ak_goa_by_catg.Rds"))
 
 # Format data
 data3 <- data_orig3 %>%
@@ -51,7 +57,7 @@ data3 <- data_orig3 %>%
          comm_name=recode(comm_name,
                           "Pacific geoduck clam"="Geoduck",
                           # "Weathervane scallop"="",
-                          # "Majestic squid"="",
+                          "Majestic squid"="Magister armhook squid",
                           "Bairdi crab tanner"="Bairdi tanner crab",
                           "Golden (brown) king crab"="Golden king crab",
                           "Alaska plaice flounder"="Alaska plaice",
@@ -89,7 +95,7 @@ data3 <- data_orig3 %>%
   # Add scientific name
   left_join(pacfin_spp %>% select(comm_name, sci_name), by="comm_name") %>%
   mutate(sci_name=case_when(comm_name=="Weathervane scallop" ~ "Patinopecten caurinus",
-                            comm_name=="Majestic squid" ~ "Patinopecten caurinus",
+                            comm_name=="Magister armhook squid" ~ "Berryteuthis magister",
                             comm_name=="Pacific sleeper shark" ~ "Somniosus pacificus",
                             comm_name=="Smooth lumpsucker" ~ "Aptocyclus ventricosus",
                             comm_name=="Salmon shark" ~ "Lamna ditropis",
@@ -102,7 +108,8 @@ data3 <- data_orig3 %>%
   mutate(sci_name=recode(sci_name,
                          "Cancer magister"="Metacarcinus magister",
                          "Clupea harengus pallasii"="Clupea pallasii pallasii",
-                         "Pleuronectus quadrituberculatus"="Pleuronectes quadrituberculatus"))
+                         "Pleuronectus quadrituberculatus"="Pleuronectes quadrituberculatus"),
+         sci_name=ifelse(sci_name=="Elasmobranchii spp.", NA, sci_name))
 
 # Which common names are missing species names?
 data3 %>%
@@ -111,3 +118,6 @@ data3 %>%
 
 # Check names
 freeR::check_names(data3$sci_name %>% unique() %>% sort())
+
+# Export data
+saveRDS(data3, file=file.path(outdir, "2011_2019_ak_goa_by_species.Rds"))

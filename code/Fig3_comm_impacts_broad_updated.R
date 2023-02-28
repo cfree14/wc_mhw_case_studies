@@ -16,6 +16,22 @@ plotdir <- "figures"
 # Read data
 data_orig <- readRDS(data, file=file.path(datadir, "WC_1980_2021_commercial_landings.Rds"))
 
+# Read AK total data
+ak_tot <- readRDS("data/landings/goa/processed/2004_2021_ak_goa_total.Rds") %>%
+  mutate(state="Alaska (below)")
+
+# Rad and format AK by category data
+ak_catg <- readRDS("data/landings/goa/processed/2011_2019_ak_goa_by_catg.Rds") %>%
+  rename(mgmt_group=category) %>%
+  # Add state
+  mutate(state="Alaska") %>%
+  # Add period
+  mutate(period=cut(year, breaks=c(2010, 2013, 2016, 2020), labels=c("Before", "During", "After"), right=T)) %>%
+  # Summarize
+  group_by(state, mgmt_group, period) %>%
+  summarise(value_usd=sum(value_usd, na.rm=T)) %>%
+  ungroup()
+
 
 # Build data
 ################################################################################
@@ -31,9 +47,12 @@ data_tot <- data_orig %>%
   group_by(state, year) %>%
   summarize(landings_lb=sum(landings_lb, na.rm=T),
             value_usd=sum(value_usd, na.rm=T)) %>%
+  # Remove Alaska
+  filter(state!="Alaska") %>%
+  # Add Alaska
+  bind_rows(ak_tot) %>%
   # Format state
-  mutate(state=recode(state, "Alaska"="Alaska (below)"),
-         state=factor(state, levels=c("California", "Oregon", "Washington", "British Columbia", "Alaska (below)")))
+  mutate(state=factor(state, levels=c("California", "Oregon", "Washington", "British Columbia", "Alaska (below)")))
 
 
 # Total averages by state and period
@@ -64,6 +83,17 @@ data_group <- data_orig %>%
   group_by(state, mgmt_group, period) %>%
   summarise(value_usd=sum(value_usd, na.rm=T)) %>%
   ungroup() %>%
+  # Remove Alaska
+  filter(state!="Alaska") %>%
+  # Add Alaska
+  bind_rows(ak_catg) %>%
+  # Format management group
+  mutate(mgmt_group=recode(mgmt_group,
+                           "Bivalve"="Bivalves",
+                           "Other groundfish"="Other\ngroundfish",
+                           "Miscellaneous groundfish"="Other\ngroundfish",
+                           "Highly migratory species"="Highly migratory\nspecies",
+                           "Coastal pelagic species"="Coastal pelagic\nspecies")) %>%
   # Complete
   complete(state, mgmt_group, period, fill=list(value_usd=NA)) %>%
   # Calculate percent difference
@@ -80,12 +110,8 @@ data_group <- data_orig %>%
                                     "Washington"="WA",
                                     "British Columbia"="BC",
                                     "Alaska"="AK")) %>%
-  # Format management group
-  mutate(mgmt_group=recode(mgmt_group,
-                           "Bivalve"="Bivalves",
-                               "Miscellaneous groundfish"="Other\ngroundfish",
-                               "Highly migratory species"="Highly migratory\nspecies",
-                               "Coastal pelagic species"="Coastal pelagic\nspecies"))
+  # Format value
+  mutate(value_usd=ifelse(value_usd==0, NA, value_usd))
 
 # Group order
 group_order <- data_group %>%
@@ -97,7 +123,7 @@ group_order <- data_group %>%
 
 # Order data
 data_group_ordered <- data_group %>%
-  mutate(mgmt_group_use=factor(mgmt_group, levels=group_order$mgmt_group))
+  mutate(mgmt_group=factor(mgmt_group, levels=group_order$mgmt_group))
 
 
 # Plot data
