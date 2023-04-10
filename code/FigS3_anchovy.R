@@ -81,5 +81,7 @@ g <- gridExtra::grid.arrange(g1, g2, ncol=1)
 # Export plot
 ggsave(g, filename=file.path(plotdir, "FigS3_anchovy_case_study.png"),
        width=6.5, height=4, units="in", dpi=600)
+ggsave(g, filename=file.path(plotdir, "FigS3_anchovy_case_study.pdf"),
+       width=6.5, height=4, units="in", dpi=600)
 
 

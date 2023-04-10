@@ -304,9 +304,10 @@ g
 ################################################################################
 
 # Export plot
-ggsave(g, filename=file.path(plotdir, "Fig8_negative_impacts.png"),
+ggsave(g, filename=file.path(plotdir, "Fig6_negative_impacts.png"),
        width=6.5, height=6.5, units="in", dpi=600)
-
+ggsave(g, filename=file.path(plotdir, "Fig6_negative_impacts.pdf"),
+       width=6.5, height=6.5, units="in", dpi=600)
 
 
 

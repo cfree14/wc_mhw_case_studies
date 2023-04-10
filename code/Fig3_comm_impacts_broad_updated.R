@@ -236,4 +236,6 @@ g
 # Export
 ggsave(g, filename=file.path(plotdir, "Fig3_comm_impacts_broad_updated.png"),
        width=6.5, height=3, units="in", dpi=600)
+ggsave(g, filename=file.path(plotdir, "Fig3_comm_impacts_broad_updated.pdf"),
+       width=6.5, height=3, units="in", dpi=600)
 

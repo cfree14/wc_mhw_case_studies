@@ -146,4 +146,6 @@ g
 # Export
 ggsave(g, filename=file.path(plotdir, "Fig1_mhw_timeline.png"),
        width=6.5, height=5, units="in", dpi=600)
+ggsave(g, filename=file.path(plotdir, "Fig1_mhw_timeline.pdf"),
+       width=6.5, height=5, units="in", dpi=600)
 

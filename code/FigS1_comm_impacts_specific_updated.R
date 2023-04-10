@@ -190,7 +190,9 @@ g <- gridExtra::grid.arrange(g1, g2, nrow=1, widths=c(0.43, 0.57))
 g
 
 # Export
-ggsave(g, filename=file.path(plotdir, "Fig4_comm_impacts_specific_updated.png"),
+ggsave(g, filename=file.path(plotdir, "FigS1_comm_impacts_specific_updated.png"),
+       width=8, height=8, units="in", dpi=600)
+ggsave(g, filename=file.path(plotdir, "FigS1_comm_impacts_specific_updated.pdf"),
        width=8, height=8, units="in", dpi=600)
 
 

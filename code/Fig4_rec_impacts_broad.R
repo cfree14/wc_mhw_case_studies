@@ -224,6 +224,8 @@ g <- gridExtra::grid.arrange(g1, g2, g3, layout_matrix=layout_matrix, heights=c(
 g
 
 # Export
-ggsave(g, filename=file.path(plotdir, "Fig5_rec_impacts_broad.png"),
+ggsave(g, filename=file.path(plotdir, "Fig4_rec_impacts_broad.png"),
+       width=6.5, height=4, units="in", dpi=600)
+ggsave(g, filename=file.path(plotdir, "Fig4_rec_impacts_broad.pdf"),
        width=6.5, height=4, units="in", dpi=600)
 

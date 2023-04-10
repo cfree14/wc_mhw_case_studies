@@ -142,6 +142,8 @@ g
 # Export plot
 ggsave(g, filename=file.path(plotdir, "Fig2_wc_disasters_new.png"),
        width=6.5, height=3, units="in", dpi=600)
+ggsave(g, filename=file.path(plotdir, "Fig2_wc_disasters_new.pdf"),
+       width=6.5, height=3, units="in", dpi=600)
 
 
 
